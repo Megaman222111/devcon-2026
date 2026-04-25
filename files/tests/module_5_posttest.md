@@ -13,3 +13,7 @@
 **5.** The phonetic alphabet words for the letters F, N, and S are : , and
 
 **6.** Why is it important to admit you cannot remember a detail in court?
+
+**7.** Why should security notes be written in a clear and factual way?
+
+**8.** What is one reason accurate reports help in court or investigations?

@@ -11,3 +11,7 @@
 **4.** You should familiarize yourself with the mobility and other special needs of individuals an emergency situation occurs.
 
 **5.** You should perform a scan of an area when looking for unusual items to ensure all possible locations are checked.
+
+**6.** Why should you follow site post orders during an alarm response?
+
+**7.** What information should be documented after an emergency or alarm incident?

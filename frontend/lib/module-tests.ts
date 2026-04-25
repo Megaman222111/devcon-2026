@@ -3,7 +3,7 @@ import path from 'node:path'
 
 export type ModuleTestKind = 'pretest' | 'posttest'
 
-export type ModuleTestQuestionType = 'true-false' | 'multiple-choice' | 'open'
+export type ModuleTestQuestionType = 'true-false' | 'multiple-choice' | 'open' | 'video'
 
 export interface ModuleTestOption {
   id: string

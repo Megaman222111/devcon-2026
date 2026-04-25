@@ -15,3 +15,7 @@
 **5.** Afternoon workers should have their main meal
 
 **6.** Wearing issued by your employer is one way to minimize risk.
+
+**7.** Why is it important to report hazards as soon as you notice them?
+
+**8.** What is one effect fatigue can have on safety at work?

@@ -15,3 +15,7 @@
 **5.** Picking the lock on a secured office and removing items without permission is an example of
 
 **6.** The is legislation which protects workers in the province of Alberta.
+
+**7.** Why is it important to explain the reason for an arrest clearly to a person being detained?
+
+**8.** What should a security professional do if they are unsure whether they have lawful authority to act?

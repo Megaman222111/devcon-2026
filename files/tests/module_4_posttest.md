@@ -13,3 +13,7 @@
 **5.** Up to % of the meaning in conversations comes from non-verbal communication.
 
 **6.** Effective communication is vs. arrogant, vs. dismissive, and vs. aggressive.
+
+**7.** Why is listening carefully important during a difficult conversation?
+
+**8.** Give one example of positive non-verbal communication.

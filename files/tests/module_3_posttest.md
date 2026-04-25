@@ -9,3 +9,7 @@
 **3.** , , and three strategies to try when dealing with a worked-up crowd.
 
 **4.** Three key considerations before using force should be : , and eee eee eee
+
+**5.** Why is situational awareness important when performing patrol duties?
+
+**6.** What should you review before beginning work at a new post?

@@ -9,11 +9,11 @@ function getBackendUrl() {
 const fallbackInsights = {
   keyIdeas: ['Review the section and focus on core concepts and practical terms.'],
   keywords: [
-    { english: 'security professional', french: 'professionnel de la securite' },
-    { english: 'observation', french: 'observation' },
-    { english: 'reporting', french: 'rapport' },
-    { english: 'compliance', french: 'conformite' },
-    { english: 'safety', french: 'securite' },
+    { english: 'security professional', translated: 'professionnel de la securite' },
+    { english: 'observation', translated: 'observation' },
+    { english: 'reporting', translated: 'rapport' },
+    { english: 'compliance', translated: 'conformite' },
+    { english: 'safety', translated: 'securite' },
   ],
 }
 

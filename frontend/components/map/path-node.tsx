@@ -127,7 +127,7 @@ export function PathNode({
           {lessonTitle}
         </div>
         {xp && state === 'completed' && (
-          <div className="text-xs text-primary font-semibold mt-1">+{xp} XP</div>
+          <div className="text-xs text-primary font-semibold mt-1">+{xp} Lightning</div>
         )}
       </div>
     </motion.button>

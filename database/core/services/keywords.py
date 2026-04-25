@@ -94,7 +94,7 @@ def extract_with_translation(
             translated = translator.translate(keyword, target_lang=target_lang, source_lang=source_lang)
         except Exception:  # noqa: BLE001
             translated = keyword
-        paired.append({"english": keyword, "french": translated})
+        paired.append({"english": keyword, "translated": translated})
     return {
         "keyIdeas": ["Review the section and focus on the highlighted study terms."],
         "keywords": paired,

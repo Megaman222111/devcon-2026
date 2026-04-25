@@ -1,11 +1,13 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowLeft, CheckCircle2, ChevronRight, Pencil, RotateCcw } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, ChevronRight, Lightbulb, Pencil, RotateCcw } from 'lucide-react'
+import { HeartSystem } from '@/components/gamification/heart-system'
 import { ProgressBar } from '@/components/gamification/progress-bar'
 import { InteractiveVideoQuestion } from '@/components/test/interactive-video-question'
+import { useAppStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import type { ModuleTest, ModuleTestQuestion } from '@/lib/module-tests'
 
@@ -16,6 +18,55 @@ interface ModuleTestRunnerProps {
 }
 
 type AnswerMap = Record<string, string>
+
+const TEST_ANSWER_KEYS: Record<string, string> = {
+  'q-pretest-1-1': 'b',
+  'q-pretest-1-2': 'a',
+  'q-pretest-1-3': 'b',
+  'q-pretest-1-4': 'a',
+  'q-pretest-1-5': 'b',
+  'q-pretest-1-6': 'b',
+  'q-pretest-2-1': 'b',
+  'q-pretest-2-2': 'b',
+  'q-pretest-2-3': 'a',
+  'q-pretest-2-4': 'b',
+  'q-pretest-2-5': 'b',
+  'q-pretest-2-6': 'a',
+  'q-pretest-3-1': 'b',
+  'q-pretest-3-2': 'a',
+  'q-pretest-3-3': 'b',
+  'q-pretest-3-4': 'b',
+  'q-pretest-3-5': 'b',
+  'q-pretest-3-6': 'b',
+  'q-pretest-4-1': 'b',
+  'q-pretest-4-2': 'b',
+  'q-pretest-4-3': 'a',
+  'q-pretest-4-4': 'b',
+  'q-pretest-4-5': 'b',
+  'q-pretest-4-6': 'b',
+  'q-pretest-5-1': 'b',
+  'q-pretest-5-2': 'b',
+  'q-pretest-5-3': 'a',
+  'q-pretest-5-4': 'b',
+  'q-pretest-5-5': 'a',
+  'q-pretest-5-6': 'b',
+  'q-pretest-6-1': 'b',
+  'q-pretest-6-2': 'b',
+  'q-pretest-6-3': 'b',
+  'q-pretest-6-4': 'b',
+  'q-pretest-6-5': 'b',
+  'q-pretest-6-6': 'b',
+  'q-pretest-7-1': 'b',
+  'q-pretest-7-2': 'b',
+  'q-pretest-7-3': 'b',
+  'q-pretest-7-4': 'a',
+  'q-pretest-7-5': 'a',
+  'q-pretest-7-6': 'a',
+  'q-posttest-1-1': 'b',
+  'q-posttest-1-2': 'a',
+  'q-posttest-2-2': 'a',
+  'q-posttest-7-4': 'a',
+}
 
 function isAnswered(question: ModuleTestQuestion, answers: AnswerMap) {
   if (question.type === 'video') return true
@@ -36,9 +87,19 @@ export function ModuleTestRunner({ test, moduleId, backHref }: ModuleTestRunnerP
   const [stage, setStage] = useState<'intro' | 'question' | 'review'>('intro')
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<AnswerMap>({})
+  const [hiddenOptionIdsByQuestion, setHiddenOptionIdsByQuestion] = useState<Record<string, string[]>>({})
+  const [reviewRewardGranted, setReviewRewardGranted] = useState(false)
+  const hearts = useAppStore((state) => state.progress.hearts)
+  const loseHeart = useAppStore((state) => state.loseHeart)
+  const addXP = useAppStore((state) => state.addXP)
+  const addToast = useAppStore((state) => state.addToast)
 
   const totalQuestions = test.questions.length
   const question = test.questions[currentIndex]
+  const questionId = question?.id ?? ''
+  const hiddenOptionIds = questionId ? hiddenOptionIdsByQuestion[questionId] ?? [] : []
+  const correctOptionId = questionId ? TEST_ANSWER_KEYS[questionId] : undefined
+  const visibleOptions = question.options?.filter((option) => !hiddenOptionIds.includes(option.id)) ?? []
   const progressPercent = totalQuestions
     ? ((currentIndex + 1) / totalQuestions) * 100
     : 0
@@ -46,6 +107,16 @@ export function ModuleTestRunner({ test, moduleId, backHref }: ModuleTestRunnerP
     () => test.questions.filter((item) => isAnswered(item, answers)).length,
     [answers, test.questions]
   )
+  const objectiveCorrectCount = useMemo(
+    () =>
+      test.questions.reduce((count, item) => {
+        const key = TEST_ANSWER_KEYS[item.id]
+        if (!key || !item.options?.length) return count
+        return answers[item.id] === key ? count + 1 : count
+      }, 0),
+    [answers, test.questions]
+  )
+  const reviewLightningReward = objectiveCorrectCount * 10
 
   const setAnswer = (id: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [id]: value }))
@@ -66,8 +137,74 @@ export function ModuleTestRunner({ test, moduleId, backHref }: ModuleTestRunnerP
 
   const handleRestart = () => {
     setAnswers({})
+    setHiddenOptionIdsByQuestion({})
+    setReviewRewardGranted(false)
     setCurrentIndex(0)
     setStage('intro')
+  }
+
+  useEffect(() => {
+    if (stage !== 'review' || reviewRewardGranted) return
+    if (reviewLightningReward > 0) {
+      addXP(reviewLightningReward)
+      addToast({
+        type: 'xp-gain',
+        message: `+${reviewLightningReward} lightning from ${test.kind === 'pretest' ? 'pre-test' : 'post-test'} results.`,
+      })
+    }
+    setReviewRewardGranted(true)
+  }, [addToast, addXP, reviewLightningReward, reviewRewardGranted, stage, test.kind])
+
+  const handleUseHint = () => {
+    if (!question || !question.options?.length) {
+      addToast({ type: 'info', message: 'Hints are available only for multiple-choice questions.' })
+      return
+    }
+    if (!correctOptionId) {
+      addToast({ type: 'info', message: 'Hint key is not available for this question.' })
+      return
+    }
+    if (hearts <= 0) {
+      addToast({ type: 'error', message: 'No hearts left. You cannot use a hint right now.' })
+      return
+    }
+
+    const selectedAnswer = answers[question.id]
+    const hiddenSet = new Set(hiddenOptionIdsByQuestion[question.id] ?? [])
+    const removableWrong = question.options.filter(
+      (option) =>
+        option.id !== correctOptionId &&
+        !hiddenSet.has(option.id) &&
+        option.id !== selectedAnswer
+    )
+    const fallbackWrong = question.options.filter(
+      (option) => option.id !== correctOptionId && !hiddenSet.has(option.id)
+    )
+    const optionToHide = removableWrong[0] ?? fallbackWrong[0]
+
+    if (!optionToHide) {
+      addToast({ type: 'info', message: 'No more wrong options left to remove.' })
+      return
+    }
+
+    setHiddenOptionIdsByQuestion((prev) => ({
+      ...prev,
+      [question.id]: [...(prev[question.id] ?? []), optionToHide.id],
+    }))
+
+    if (selectedAnswer === optionToHide.id) {
+      setAnswers((prev) => {
+        const next = { ...prev }
+        delete next[question.id]
+        return next
+      })
+    }
+
+    loseHeart()
+    addToast({ type: 'info', message: 'Hint used: removed one wrong answer (-1 life).' })
+    if (hearts <= 1) {
+      addToast({ type: 'error', message: 'You ran out of hearts.' })
+    }
   }
 
   if (totalQuestions === 0) {
@@ -141,6 +278,11 @@ export function ModuleTestRunner({ test, moduleId, backHref }: ModuleTestRunnerP
         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
           You answered {answeredCount} of {totalQuestions} questions.
         </p>
+        {reviewLightningReward > 0 && (
+          <p className="mt-1 text-sm font-semibold text-amber-600 dark:text-amber-400">
+            Lightning earned: +{reviewLightningReward}
+          </p>
+        )}
 
         <div className="mt-6 space-y-4">
           {test.questions.map((q) => {
@@ -200,7 +342,10 @@ export function ModuleTestRunner({ test, moduleId, backHref }: ModuleTestRunnerP
           <span>
             Question {currentIndex + 1} of {totalQuestions}
           </span>
-          <span>{answeredCount} answered</span>
+          <div className="flex items-center gap-3">
+            <span>{answeredCount} answered</span>
+            <HeartSystem lives={hearts} size="sm" showCount />
+          </div>
         </div>
       </div>
 
@@ -262,7 +407,7 @@ export function ModuleTestRunner({ test, moduleId, backHref }: ModuleTestRunnerP
             </div>
           ) : (
             <div className="space-y-3">
-              {question.options?.map((option) => {
+              {visibleOptions.map((option) => {
                 const selected = answers[question.id] === option.id
                 return (
                   <button
@@ -292,6 +437,23 @@ export function ModuleTestRunner({ test, moduleId, backHref }: ModuleTestRunnerP
                   </button>
                 )
               })}
+              <button
+                type="button"
+                onClick={handleUseHint}
+                disabled={
+                  hearts <= 0 ||
+                  !correctOptionId ||
+                  !question.options?.some(
+                    (option) =>
+                      option.id !== correctOptionId &&
+                      !hiddenOptionIds.includes(option.id)
+                  )
+                }
+                className="mt-2 inline-flex items-center gap-2 text-sm text-amber-600 transition-colors hover:text-amber-500 disabled:cursor-not-allowed disabled:opacity-50 dark:text-amber-400 dark:hover:text-amber-300"
+              >
+                <Lightbulb size={16} />
+                Need a hint? (-1 life)
+              </button>
             </div>
           )}
         </div>

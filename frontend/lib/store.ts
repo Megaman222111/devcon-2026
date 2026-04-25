@@ -73,6 +73,7 @@ interface AppState {
   // Progress
   progress: Progress
   addXP: (amount: number) => void
+  buyHearts: (heartsToBuy: number, energyCost: number) => boolean
   loseHeart: () => void
   refillHearts: () => void
   markLessonComplete: (lessonId: string) => void
@@ -145,7 +146,7 @@ export const useAppStore = create<AppState>()(
 
       addXP: (amount) =>
         set((state) => {
-          const newXP = state.progress.xp + amount
+          const newXP = Math.max(0, state.progress.xp + amount)
           const newLevel = calculateLevel(newXP)
           const leveledUp = newLevel > state.progress.level
 
@@ -165,6 +166,33 @@ export const useAppStore = create<AppState>()(
             },
           }
         }),
+
+      buyHearts: (heartsToBuy, energyCost) => {
+        if (heartsToBuy <= 0 || energyCost <= 0) return false
+
+        let didPurchase = false
+        set((state) => {
+          if (state.progress.xp < energyCost) return state
+          didPurchase = true
+          return {
+            progress: {
+              ...state.progress,
+              xp: state.progress.xp - energyCost,
+              hearts: state.progress.hearts + heartsToBuy,
+              heartsRefillAt: null,
+            },
+          }
+        })
+
+        if (didPurchase) {
+          get().addToast({
+            type: 'info',
+            message: `Purchased ${heartsToBuy} life${heartsToBuy > 1 ? 's' : ''} for ${energyCost} lightning.`,
+          })
+        }
+
+        return didPurchase
+      },
 
       loseHeart: () =>
         set((state) => {

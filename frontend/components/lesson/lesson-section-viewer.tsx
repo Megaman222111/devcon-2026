@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { BookOpenText, ChevronRight, Languages } from 'lucide-react'
 import { MarkdownRenderer } from '@/components/lesson/markdown-renderer'
+import { AiAssistant } from '@/components/chatbot/ai-assistant'
 import { useAppStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
 
@@ -391,6 +392,7 @@ export function LessonSectionViewer({
         </aside>
       </div>
 
+      <AiAssistant />
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type LanguageCode = 'en' | 'tl' | 'hi' | 'ur' | 'zh' | 'ko' | 'vi' | 'es' | 'pt' | 'fr' | 'ar' | 'ja'
+export type LanguageCode = 'en' | 'tl' | 'hi' | 'ur' | 'zh' | 'ko' | 'vi' | 'es' | 'pt' | 'fr' | 'ar' | 'ja' | 'gu'
 export type TranslationMode = 'keywords' | 'ondemand' | 'none'
 
 export interface Toast {

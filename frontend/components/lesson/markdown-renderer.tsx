@@ -24,7 +24,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         strong: ({ children }) => <strong className="text-black font-semibold">{children}</strong>,
         em: ({ children }) => <em className="text-black italic">{children}</em>,
         blockquote: ({ children }) => (
-          <blockquote className="border-l-4 border-amber-500 bg-amber-50 px-4 py-3 rounded-r-lg text-black mb-5">
+          <blockquote className="border-l-4 border-amber-500 bg-amber-50 px-4 py-3 rounded-r-lg text-black mb-5 [&_p:last-child]:mb-0">
             {children}
           </blockquote>
         ),

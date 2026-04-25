@@ -14,17 +14,25 @@ const iconMap = {
 }
 
 const colorMap = {
-  success: 'border-l-emerald-500 bg-navy-800',
-  error: 'border-l-red-500 bg-navy-800',
-  info: 'border-l-amber-500 bg-navy-800',
-  'xp-gain': 'bg-amber-500/90 border-l-amber-300',
+  success:
+    'border-l-emerald-600 bg-emerald-50 border border-emerald-200 border-l-4 shadow-md',
+  error: 'border-l-red-600 bg-red-50 border border-red-200 border-l-4 shadow-md',
+  info: 'border-l-amber-600 bg-amber-50 border border-amber-200 border-l-4 shadow-md',
+  'xp-gain': 'bg-amber-500/90 border-l-amber-300 border border-amber-400',
 }
 
 const iconColorMap = {
-  success: 'text-emerald-500',
-  error: 'text-red-500',
-  info: 'text-amber-500',
+  success: 'text-emerald-700',
+  error: 'text-red-700',
+  info: 'text-amber-700',
   'xp-gain': 'text-navy-900 fill-navy-900',
+}
+
+const messageColorMap = {
+  success: 'text-emerald-950',
+  error: 'text-red-950',
+  info: 'text-amber-950',
+  'xp-gain': 'text-navy-900 font-display font-bold',
 }
 
 function ToastItem({ toast }: { toast: Toast }) {
@@ -54,19 +62,16 @@ function ToastItem({ toast }: { toast: Toast }) {
       )}
     >
       <Icon size={20} className={iconColorMap[toast.type]} />
-      <p
-        className={cn(
-          'flex-1 text-sm font-medium',
-          isXPToast ? 'text-navy-900 font-display font-bold' : 'text-white'
-        )}
-      >
+      <p className={cn('flex-1 text-sm font-medium', messageColorMap[toast.type])}>
         {toast.message}
       </p>
       <button
         onClick={() => removeToast(toast.id)}
         className={cn(
-          'p-1 rounded hover:bg-white/10 transition-colors',
-          isXPToast ? 'text-navy-900/70' : 'text-navy-400'
+          'p-1 rounded transition-colors',
+          isXPToast
+            ? 'text-navy-900/70 hover:bg-black/5'
+            : 'text-slate-600 hover:bg-black/5'
         )}
       >
         <X size={14} />

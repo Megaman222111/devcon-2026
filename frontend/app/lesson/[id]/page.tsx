@@ -4,9 +4,8 @@ import matter from 'gray-matter'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { AppShell } from '@/components/layout/app-shell'
-import { KeyTermPanel } from '@/components/lesson/key-term-panel'
 import { LessonSectionViewer } from '@/components/lesson/lesson-section-viewer'
-import { lessonContentById, lessonsForModule } from '@/lib/mock-data'
+import { lessonsForModule } from '@/lib/mock-data'
 
 interface LessonPageProps {
   params: Promise<{ id: string }>
@@ -112,7 +111,6 @@ export default async function LessonPage({ params }: LessonPageProps) {
   const { id } = await params
   const lessonMeta = Object.values(lessonsForModule).flat().find((lesson) => lesson.id === id)
   const lesson = await loadLessonMarkdown(id)
-  const keyTerms = lessonContentById[id]?.keyTerms ?? []
 
   return (
     <AppShell showBottomNav={false} breadcrumb={{ module: lesson.moduleLabel, lesson: lesson.title }}>
@@ -125,19 +123,9 @@ export default async function LessonPage({ params }: LessonPageProps) {
           Back to Map
         </Link>
 
-        <div className="grid lg:grid-cols-[1fr_320px] gap-6">
-          <div>
-            <div className="text-sm text-amber-500 font-semibold mb-2">LESSON {lessonMeta?.number ?? 'TBD'}</div>
-            <LessonSectionViewer lessonId={id} sections={lesson.sections} />
-          </div>
-
-          {keyTerms.length > 0 && (
-            <aside>
-              <div className="lg:sticky lg:top-28 bg-navy-900 rounded-2xl p-5 border border-navy-700">
-                <KeyTermPanel terms={keyTerms} targetLanguage="Tagalog" />
-              </div>
-            </aside>
-          )}
+        <div>
+          <div className="text-sm text-amber-500 font-semibold mb-2">LESSON {lessonMeta?.number ?? 'TBD'}</div>
+          <LessonSectionViewer lessonId={id} sections={lesson.sections} />
         </div>
 
       </div>

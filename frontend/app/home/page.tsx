@@ -114,8 +114,8 @@ export default function HomePage() {
                       questionsCount={15}
                       passingScore={70}
                       locked={!isModuleComplete}
-                      passed={module.number === 1}
-                      score={module.number === 1 ? 87 : undefined}
+                      passed={module.number < 7}
+                      score={module.number < 7 ? 85 + module.number : undefined}
                     />
                   </div>
                 )}
@@ -134,7 +134,7 @@ export default function HomePage() {
           <h3 className="font-bold text-lg text-foreground">Ready to continue?</h3>
           <p className="mt-1 text-sm text-muted-foreground">Pick up where you left off</p>
           <Link
-            href="/lesson/l-1-2"
+            href="/module/mod-7/exam"
             className="mt-4 inline-flex items-center gap-2 btn-duo btn-duo-primary"
           >
             Continue Learning

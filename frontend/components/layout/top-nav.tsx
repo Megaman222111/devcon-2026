@@ -7,8 +7,16 @@ import { XPBar } from '@/components/gamification/xp-bar'
 import { HeartSystem } from '@/components/gamification/heart-system'
 import { StreakCounter } from '@/components/gamification/streak-counter'
 import { useAppStore } from '@/lib/store'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Plus, Zap } from 'lucide-react'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface TopNavProps {
   breadcrumb?: {
@@ -25,6 +33,18 @@ export function TopNav({
   className,
 }: TopNavProps) {
   const progress = useAppStore((state) => state.progress)
+  const buyHearts = useAppStore((state) => state.buyHearts)
+  const addToast = useAppStore((state) => state.addToast)
+
+  const handleBuyHearts = (heartsToBuy: number, energyCost: number) => {
+    const purchased = buyHearts(heartsToBuy, energyCost)
+    if (!purchased) {
+      addToast({
+        type: 'error',
+        message: `Not enough lightning. You need ${energyCost}, but have ${progress.xp}.`,
+      })
+    }
+  }
 
   return (
     <header
@@ -73,6 +93,39 @@ export function TopNav({
                 />
               </div>
               <HeartSystem lives={progress.hearts} size="sm" />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2 py-1 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
+                  >
+                    <Plus size={12} />
+                    <span className="hidden sm:inline">Buy</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>Buy Lives</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => handleBuyHearts(1, 20)}>
+                    +1 life
+                    <span className="ml-auto inline-flex items-center gap-1 text-xs text-amber-600">
+                      <Zap size={12} className="fill-amber-500 text-amber-500" />
+                      20
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => handleBuyHearts(3, 55)}>
+                    +3 lives
+                    <span className="ml-auto inline-flex items-center gap-1 text-xs text-amber-600">
+                      <Zap size={12} className="fill-amber-500 text-amber-500" />
+                      55
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">
+                    Lightning: {progress.xp}
+                  </DropdownMenuLabel>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <StreakCounter streak={progress.streak} size="sm" />
             </>
           )}

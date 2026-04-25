@@ -20,19 +20,21 @@ export default function QuizPage() {
   const router = useRouter()
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
+  const [hiddenOptionIdsByQuestion, setHiddenOptionIdsByQuestion] = useState<Record<string, string[]>>({})
   const [answerSubmitted, setAnswerSubmitted] = useState(false)
   const [showFeedback, setShowFeedback] = useState(false)
   const [correctCount, setCorrectCount] = useState(0)
 
   const progress = useAppStore((state) => state.progress)
   const loseHeart = useAppStore((state) => state.loseHeart)
-  const addXP = useAppStore((state) => state.addXP)
   const addToast = useAppStore((state) => state.addToast)
 
   const question = sampleQuiz[currentQuestion]
   const totalQuestions = sampleQuiz.length
   const progressPercent = ((currentQuestion + 1) / totalQuestions) * 100
   const isCorrect = selectedAnswer === question.correctId
+  const hiddenOptionIds = hiddenOptionIdsByQuestion[question.id] ?? []
+  const visibleOptions = question.options.filter((option) => !hiddenOptionIds.includes(option.id))
 
   const getAnswerState = (optionId: string): AnswerState => {
     if (!answerSubmitted) {
@@ -59,12 +61,51 @@ export default function QuizPage() {
 
     if (isCorrect) {
       setCorrectCount(correctCount + 1)
-      addXP(25)
     } else {
       loseHeart()
       if (progress.hearts <= 1) {
         addToast({ type: 'error', message: 'You ran out of hearts! Review the lesson and try again.' })
       }
+    }
+  }
+
+  const handleUseHint = () => {
+    if (answerSubmitted) return
+    if (progress.hearts <= 0) {
+      addToast({ type: 'error', message: 'No hearts left. You cannot use a hint right now.' })
+      return
+    }
+
+    const hiddenSet = new Set(hiddenOptionIdsByQuestion[question.id] ?? [])
+    const removableWrong = question.options.filter(
+      (option) =>
+        option.id !== question.correctId &&
+        !hiddenSet.has(option.id) &&
+        option.id !== selectedAnswer
+    )
+    const fallbackWrong = question.options.filter(
+      (option) => option.id !== question.correctId && !hiddenSet.has(option.id)
+    )
+    const optionToHide = removableWrong[0] ?? fallbackWrong[0]
+
+    if (!optionToHide) {
+      addToast({ type: 'info', message: 'No more wrong options left to remove.' })
+      return
+    }
+
+    setHiddenOptionIdsByQuestion((prev) => ({
+      ...prev,
+      [question.id]: [...(prev[question.id] ?? []), optionToHide.id],
+    }))
+
+    if (selectedAnswer === optionToHide.id) {
+      setSelectedAnswer(null)
+    }
+
+    loseHeart()
+    addToast({ type: 'info', message: 'Hint used: removed one wrong answer (-1 life).' })
+    if (progress.hearts <= 1) {
+      addToast({ type: 'error', message: 'You ran out of hearts.' })
     }
   }
 
@@ -79,7 +120,9 @@ export default function QuizPage() {
       }, 300)
     } else {
       // Quiz complete - go to results
-      router.push(`/lesson/${params.id}/results?correct=${correctCount + (isCorrect ? 1 : 0)}&total=${totalQuestions}`)
+      router.push(
+        `/lesson/${params.id}/results?correct=${correctCount + (isCorrect ? 1 : 0)}&total=${totalQuestions}&attempt=${Date.now()}`
+      )
     }
   }
 
@@ -121,7 +164,7 @@ export default function QuizPage() {
             </h2>
 
             <div className="mt-8 space-y-3">
-              {question.options.map((option) => (
+              {visibleOptions.map((option) => (
                 <QuizCard
                   key={option.id}
                   letter={option.id}
@@ -135,9 +178,14 @@ export default function QuizPage() {
             </div>
 
             {!answerSubmitted && (
-              <button className="mt-6 inline-flex items-center gap-2 text-sm text-amber-600 transition-colors hover:text-amber-500 dark:text-amber-400 dark:hover:text-amber-300">
+              <button
+                type="button"
+                onClick={handleUseHint}
+                disabled={progress.hearts <= 0 || visibleOptions.length <= 1}
+                className="mt-6 inline-flex items-center gap-2 text-sm text-amber-600 transition-colors hover:text-amber-500 disabled:cursor-not-allowed disabled:opacity-50 dark:text-amber-400 dark:hover:text-amber-300"
+              >
                 <Lightbulb size={16} />
-                Need a hint?
+                Need a hint? (-1 life)
               </button>
             )}
 
@@ -160,7 +208,7 @@ export default function QuizPage() {
         correct={isCorrect}
         explanation={question.explanation}
         reference={question.reference}
-        xpGained={isCorrect ? 25 : 0}
+        xpGained={0}
         onContinue={handleContinue}
       />
     </AppShell>

@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Flame, Star, ChevronRight } from 'lucide-react'
+import { Flame, ChevronRight } from 'lucide-react'
 import { AppShell } from '@/components/layout/app-shell'
 import { ModuleHeader } from '@/components/map/module-header'
 import { PathNode } from '@/components/map/path-node'
@@ -15,13 +15,6 @@ import { staggerContainer, staggerItem } from '@/lib/motion-presets'
 export default function HomePage() {
   const progress = useAppStore((state) => state.progress)
   const user = useAppStore((state) => state.user)
-  const addToast = useAppStore((state) => state.addToast)
-  const addXP = useAppStore((state) => state.addXP)
-
-  const handleClaimBonus = () => {
-    addXP(5)
-    addToast({ type: 'xp-gain', message: '+5 XP Daily Bonus!' })
-  }
 
   return (
     <AppShell>
@@ -47,13 +40,9 @@ export default function HomePage() {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={handleClaimBonus}
-                className="flex items-center gap-1.5 px-4 py-2.5 bg-[#FF9600] hover:bg-[#E68A00] text-white font-bold text-sm rounded-xl transition-colors shadow-[0_3px_0_#CC7A00] active:shadow-none active:translate-y-[3px]"
-              >
-                <Star size={14} />
-                +5 XP
-              </button>
+              <div className="px-4 py-2.5 bg-[#FF9600]/15 text-[#FF9600] font-bold text-sm rounded-xl border border-[#FF9600]/30">
+                Earn lightning from quiz results
+              </div>
             </div>
           </motion.div>
         )}

@@ -20,7 +20,7 @@ export default function ProfilePage() {
 
   const stats = [
     { icon: Flame, label: 'Streak', value: progress.streak, color: 'text-[#FF9600]', bgColor: 'bg-[#FF9600]/10' },
-    { icon: Zap, label: 'XP', value: progress.xp, color: 'text-[#FFC800]', bgColor: 'bg-[#FFC800]/10' },
+    { icon: Zap, label: 'Lightning', value: progress.xp, color: 'text-[#FFC800]', bgColor: 'bg-[#FFC800]/10' },
     { icon: BookOpen, label: 'Lessons', value: progress.completedLessons.length || 7, color: 'text-[#1CB0F6]', bgColor: 'bg-[#1CB0F6]/10' },
     { icon: Clapperboard, label: 'Scenarios', value: 4, color: 'text-[#8B5CF6]', bgColor: 'bg-[#8B5CF6]/10' },
   ]

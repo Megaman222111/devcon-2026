@@ -1,32 +1,46 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Shield, ChevronRight, RotateCcw, BookOpen } from 'lucide-react'
+import { Shield, ChevronRight, RotateCcw, BookOpen, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AppShell } from '@/components/layout/app-shell'
 import { useAppStore } from '@/lib/store'
 
 export default function ExamResultsPage() {
+  const params = useParams<{ id: string }>()
+  const moduleId = params?.id
   const searchParams = useSearchParams()
   const correct = parseInt(searchParams.get('correct') || '0', 10)
   const total = parseInt(searchParams.get('total') || '1', 10)
+  const attemptId = searchParams.get('attempt') || `${correct}-${total}`
   const score = Math.round((correct / total) * 100)
   const passed = score >= 70
+  const earnedLightning = Math.max(0, correct * 20)
 
   const triggerConfetti = useAppStore((state) => state.triggerConfetti)
   const addXP = useAppStore((state) => state.addXP)
+  const addToast = useAppStore((state) => state.addToast)
   const markModuleComplete = useAppStore((state) => state.markModuleComplete)
 
   useEffect(() => {
     if (passed) {
       triggerConfetti()
-      addXP(100)
-      markModuleComplete('mod-2')
+      markModuleComplete(moduleId ?? 'mod-2')
     }
-  }, [passed, triggerConfetti, addXP, markModuleComplete])
+  }, [markModuleComplete, moduleId, passed, triggerConfetti])
+
+  useEffect(() => {
+    if (earnedLightning <= 0 || !moduleId) return
+    const rewardKey = `exam-reward:${moduleId}:${attemptId}`
+    if (window.sessionStorage.getItem(rewardKey)) return
+
+    addXP(earnedLightning)
+    addToast({ type: 'xp-gain', message: `+${earnedLightning} lightning from exam results.` })
+    window.sessionStorage.setItem(rewardKey, '1')
+  }, [addToast, addXP, attemptId, earnedLightning, moduleId])
 
   return (
     <AppShell showBottomNav={false} showStats={false}>
@@ -88,26 +102,25 @@ export default function ExamResultsPage() {
             </div>
           </motion.div>
 
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.65 }}
+            className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500/20 rounded-full"
+          >
+            <Zap size={18} className="fill-amber-400 text-amber-400" />
+            <span className="font-display font-bold text-xl text-amber-400">
+              +{earnedLightning} Lightning
+            </span>
+          </motion.div>
+
           {passed ? (
             <>
-              {/* XP Earned */}
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.7 }}
-                className="mt-8 inline-flex items-center gap-2 px-6 py-3 bg-amber-500/20 rounded-full"
-              >
-                <span className="text-2xl">⭐</span>
-                <span className="font-display font-bold text-2xl text-amber-400">
-                  +100 XP
-                </span>
-              </motion.div>
-
               {/* CTA */}
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.9 }}
+                transition={{ delay: 0.8 }}
                 className="mt-10"
               >
                 <Link

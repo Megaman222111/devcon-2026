@@ -3,11 +3,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Shield, Clock, ChevronLeft, ChevronRight, Flag } from 'lucide-react'
+import { Shield, Clock, ChevronLeft, ChevronRight, Flag, Lightbulb } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AppShell } from '@/components/layout/app-shell'
 import { ProgressBar } from '@/components/gamification/progress-bar'
+import { HeartSystem } from '@/components/gamification/heart-system'
 import { QuizCard } from '@/components/quiz/quiz-card'
+import { useAppStore } from '@/lib/store'
 import { sampleQuiz } from '@/lib/mock-data'
 
 // Generate more questions for exam by duplicating and modifying
@@ -48,10 +50,16 @@ export default function ModuleExamPage() {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [flagged, setFlagged] = useState<string[]>([])
+  const [hiddenOptionIdsByQuestion, setHiddenOptionIdsByQuestion] = useState<Record<string, string[]>>({})
   const [timeRemaining, setTimeRemaining] = useState(20 * 60) // 20 minutes
+  const hearts = useAppStore((state) => state.progress.hearts)
+  const loseHeart = useAppStore((state) => state.loseHeart)
+  const addToast = useAppStore((state) => state.addToast)
 
   const totalQuestions = examQuestions.length
   const question = examQuestions[currentQuestion]
+  const hiddenOptionIds = hiddenOptionIdsByQuestion[question.id] ?? []
+  const visibleOptions = question.options.filter((option) => !hiddenOptionIds.includes(option.id))
   const progress = ((currentQuestion + 1) / totalQuestions) * 100
 
   const formatTime = useCallback((seconds: number) => {
@@ -99,8 +107,52 @@ export default function ModuleExamPage() {
     }).length
 
     router.push(
-      `/module/${params.id}/exam/results?correct=${correct}&total=${totalQuestions}`
+      `/module/${params.id}/exam/results?correct=${correct}&total=${totalQuestions}&attempt=${Date.now()}`
     )
+  }
+
+  const handleUseHint = () => {
+    if (hearts <= 0) {
+      addToast({ type: 'error', message: 'No hearts left. You cannot use a hint right now.' })
+      return
+    }
+
+    const selectedAnswer = answers[question.id]
+    const hiddenSet = new Set(hiddenOptionIdsByQuestion[question.id] ?? [])
+    const removableWrong = question.options.filter(
+      (option) =>
+        option.id !== question.correctId &&
+        !hiddenSet.has(option.id) &&
+        option.id !== selectedAnswer
+    )
+    const fallbackWrong = question.options.filter(
+      (option) => option.id !== question.correctId && !hiddenSet.has(option.id)
+    )
+    const optionToHide = removableWrong[0] ?? fallbackWrong[0]
+
+    if (!optionToHide) {
+      addToast({ type: 'info', message: 'No more wrong options left to remove.' })
+      return
+    }
+
+    setHiddenOptionIdsByQuestion((prev) => ({
+      ...prev,
+      [question.id]: [...(prev[question.id] ?? []), optionToHide.id],
+    }))
+
+    if (selectedAnswer === optionToHide.id) {
+      setAnswers((prev) => {
+        const next = { ...prev }
+        delete next[question.id]
+        return next
+      })
+    }
+
+    loseHeart()
+    addToast({ type: 'info', message: 'Hint used: removed one wrong answer (-1 life).' })
+    if (hearts <= 1) {
+      addToast({ type: 'error', message: 'You ran out of hearts.' })
+    }
   }
 
   if (!started) {
@@ -172,6 +224,7 @@ export default function ModuleExamPage() {
               className="w-24"
               animated={false}
             />
+            <HeartSystem lives={hearts} size="sm" showCount />
           </div>
 
           <div
@@ -218,7 +271,7 @@ export default function ModuleExamPage() {
 
         {/* Answer Options */}
         <div className="space-y-3">
-          {question.options.map((option) => (
+          {visibleOptions.map((option) => (
             <QuizCard
               key={option.id}
               letter={option.id}
@@ -230,6 +283,16 @@ export default function ModuleExamPage() {
             />
           ))}
         </div>
+
+        <button
+          type="button"
+          onClick={handleUseHint}
+          disabled={hearts <= 0 || visibleOptions.length <= 1}
+          className="mt-5 inline-flex items-center gap-2 text-sm text-amber-400 transition-colors hover:text-amber-300 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Lightbulb size={16} />
+          Need a hint? (-1 life)
+        </button>
 
         {/* Question Navigator */}
         <div className="mt-8 flex flex-wrap gap-2">

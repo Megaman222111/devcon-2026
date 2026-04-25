@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Award, ChevronRight, RotateCcw, Star, Flame } from 'lucide-react'
@@ -10,20 +10,36 @@ import { ProgressBar } from '@/components/gamification/progress-bar'
 import { useAppStore } from '@/lib/store'
 
 export default function ResultsPage() {
+  const params = useParams<{ id: string }>()
+  const lessonId = params?.id
   const searchParams = useSearchParams()
   const correct = parseInt(searchParams.get('correct') || '0', 10)
   const total = parseInt(searchParams.get('total') || '1', 10)
+  const attemptId = searchParams.get('attempt') || `${correct}-${total}`
   const score = Math.round((correct / total) * 100)
   const passed = score >= 70
+  const earnedLightning = Math.max(0, correct * 20)
 
   const progress = useAppStore((state) => state.progress)
   const triggerConfetti = useAppStore((state) => state.triggerConfetti)
+  const addXP = useAppStore((state) => state.addXP)
+  const addToast = useAppStore((state) => state.addToast)
 
   useEffect(() => {
     if (passed) {
       triggerConfetti()
     }
   }, [passed, triggerConfetti])
+
+  useEffect(() => {
+    if (earnedLightning <= 0 || !lessonId) return
+    const rewardKey = `lesson-reward:${lessonId}:${attemptId}`
+    if (window.sessionStorage.getItem(rewardKey)) return
+
+    addXP(earnedLightning)
+    addToast({ type: 'xp-gain', message: `+${earnedLightning} lightning from quiz results.` })
+    window.sessionStorage.setItem(rewardKey, '1')
+  }, [addToast, addXP, attemptId, earnedLightning, lessonId])
 
   return (
     <AppShell showBottomNav={false} showStats={false}>
@@ -93,9 +109,9 @@ export default function ResultsPage() {
             <div className="w-px h-12 bg-slate-200 dark:bg-slate-700" />
             <div className="text-center">
               <div className="flex items-center gap-1 text-3xl font-display font-bold text-amber-600 dark:text-amber-400">
-                <Star size={24} className="fill-amber-500 dark:fill-amber-400" />+{correct * 25}
+                <Star size={24} className="fill-amber-500 dark:fill-amber-400" />+{earnedLightning}
               </div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">XP Earned</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">Lightning Earned</div>
             </div>
             <div className="w-px h-12 bg-slate-200 dark:bg-slate-700" />
             <div className="text-center">
@@ -107,7 +123,7 @@ export default function ResultsPage() {
             </div>
           </motion.div>
 
-          {/* XP Progress Bar */}
+          {/* Lightning Progress */}
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -117,7 +133,7 @@ export default function ResultsPage() {
             <div className="flex items-center justify-between mb-2 text-sm">
               <span className="text-slate-500 dark:text-slate-400">Level {progress.level}</span>
               <span className="text-amber-600 dark:text-amber-400">
-                {progress.xp % 150} / 150 XP
+                {progress.xp % 150} / 150 Lightning
               </span>
             </div>
             <ProgressBar

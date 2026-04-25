@@ -53,7 +53,7 @@ export function XPBar({
           animate={{ opacity: 1, y: 0 }}
           className="text-sm font-bold text-foreground"
         >
-          {xpInCurrentLevel} XP
+          {xpInCurrentLevel} Lightning
         </motion.span>
       </div>
       {showLevel && (

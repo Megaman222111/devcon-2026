@@ -10,12 +10,24 @@ export interface ModuleTestOption {
   text: string
 }
 
+export interface VideoCheckpoint {
+  id: string
+  timeSeconds: number
+  prompt: string
+  options: ModuleTestOption[]
+  correctId: string
+  explanation?: string
+}
+
 export interface ModuleTestQuestion {
   id: string
   number: string
   prompt: string
   type: ModuleTestQuestionType
   options?: ModuleTestOption[]
+  videoSrc?: string
+  videoPoster?: string
+  checkpoints?: VideoCheckpoint[]
 }
 
 export interface ModuleTest {

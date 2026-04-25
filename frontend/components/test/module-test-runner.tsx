@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowLeft, CheckCircle2, ChevronRight, Pencil, RotateCcw } from 'lucide-react'
 import { ProgressBar } from '@/components/gamification/progress-bar'
+import { InteractiveVideoQuestion } from '@/components/test/interactive-video-question'
 import { cn } from '@/lib/utils'
 import type { ModuleTest, ModuleTestQuestion } from '@/lib/module-tests'
 
@@ -220,10 +221,26 @@ export function ModuleTestRunner({ test, moduleId, backHref }: ModuleTestRunnerP
         <div className="mt-8">
           {question.type === 'video' ? (
             <div className="space-y-3">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Video placeholder
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Watch & answer
+                </div>
+                {question.checkpoints && question.checkpoints.length > 0 && (
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    {question.checkpoints.length} checkpoint
+                    {question.checkpoints.length === 1 ? '' : 's'}
+                  </div>
+                )}
               </div>
-              <VideoQuestionPlaceholder />
+              {question.videoSrc && question.checkpoints && question.checkpoints.length > 0 ? (
+                <InteractiveVideoQuestion
+                  videoSrc={question.videoSrc}
+                  poster={question.videoPoster}
+                  checkpoints={question.checkpoints}
+                />
+              ) : (
+                <VideoQuestionPlaceholder />
+              )}
             </div>
           ) : question.type === 'open' ? (
             <div>

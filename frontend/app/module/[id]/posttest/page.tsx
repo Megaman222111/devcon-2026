@@ -12,22 +12,81 @@ interface PosttestPageProps {
 
 function withVideoQuestions(test: ModuleTest): ModuleTest {
   const existingCount = test.questions.length
+  const moduleNumber = test.moduleNumber
 
   return {
     ...test,
     questions: [
       ...test.questions,
       {
-        id: `q-${test.kind}-${test.moduleNumber}-video-1`,
+        id: `q-${test.kind}-${moduleNumber}-video-1`,
         number: String(existingCount + 1),
-        prompt: 'Video question 1',
+        prompt: 'Watch the scenario and answer the checkpoint questions as they appear.',
         type: 'video',
+        videoSrc: `/files/videos/module_${moduleNumber}_q1.mp4`,
+        checkpoints: [
+          {
+            id: `q-${test.kind}-${moduleNumber}-v1-cp1`,
+            timeSeconds: 12,
+            prompt: 'At this point in the scenario, what is the security professional\'s primary responsibility?',
+            options: [
+              { id: 'a', text: 'Detain the individual immediately.' },
+              { id: 'b', text: 'Observe and accurately document what is happening.' },
+              { id: 'c', text: 'Use force to control the situation.' },
+              { id: 'd', text: 'Ignore the incident until a supervisor arrives.' },
+            ],
+            correctId: 'b',
+            explanation:
+              'A security professional\'s first duty is observation and accurate reporting — escalation only happens when warranted.',
+          },
+          {
+            id: `q-${test.kind}-${moduleNumber}-v1-cp2`,
+            timeSeconds: 32,
+            prompt: 'Which authority lets the security professional take this action?',
+            options: [
+              { id: 'a', text: 'The Criminal Code, s. 494 (citizen\'s arrest).' },
+              { id: 'b', text: 'The Charter of Rights and Freedoms.' },
+              { id: 'c', text: 'Provincial trespass legislation.' },
+              { id: 'd', text: 'Their personal judgment alone.' },
+            ],
+            correctId: 'a',
+          },
+        ],
       },
       {
-        id: `q-${test.kind}-${test.moduleNumber}-video-2`,
+        id: `q-${test.kind}-${moduleNumber}-video-2`,
         number: String(existingCount + 2),
-        prompt: 'Video question 2',
+        prompt: 'Watch the second scenario and respond at each checkpoint.',
         type: 'video',
+        videoSrc: `/files/videos/module_${moduleNumber}_q2.mp4`,
+        checkpoints: [
+          {
+            id: `q-${test.kind}-${moduleNumber}-v2-cp1`,
+            timeSeconds: 10,
+            prompt: 'What should the officer say first when initiating an arrest?',
+            options: [
+              { id: 'a', text: 'Nothing — silence avoids escalation.' },
+              { id: 'b', text: 'The reason for the arrest, clearly and calmly.' },
+              { id: 'c', text: 'A demand for identification.' },
+              { id: 'd', text: 'A threat of force.' },
+            ],
+            correctId: 'b',
+            explanation:
+              'The person being detained has a Charter right to be informed promptly of the reason for arrest.',
+          },
+          {
+            id: `q-${test.kind}-${moduleNumber}-v2-cp2`,
+            timeSeconds: 28,
+            prompt: 'If the officer is unsure they have lawful authority, the safest action is to:',
+            options: [
+              { id: 'a', text: 'Proceed and resolve concerns later.' },
+              { id: 'b', text: 'Pause and consult a supervisor or police.' },
+              { id: 'c', text: 'Use minimum force to detain anyway.' },
+              { id: 'd', text: 'Walk away and never report the incident.' },
+            ],
+            correctId: 'b',
+          },
+        ],
       },
     ],
   }

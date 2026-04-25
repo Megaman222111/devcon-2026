@@ -1,0 +1,291 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { ArrowLeft, CheckCircle2, ChevronRight, Pencil, RotateCcw } from 'lucide-react'
+import { ProgressBar } from '@/components/gamification/progress-bar'
+import { cn } from '@/lib/utils'
+import type { ModuleTest, ModuleTestQuestion } from '@/lib/module-tests'
+
+interface ModuleTestRunnerProps {
+  test: ModuleTest
+  moduleId: string
+  backHref: string
+}
+
+type AnswerMap = Record<string, string>
+
+function isAnswered(question: ModuleTestQuestion, answers: AnswerMap) {
+  const value = answers[question.id]
+  if (value === undefined || value === null) return false
+  return value.toString().trim().length > 0
+}
+
+export function ModuleTestRunner({ test, moduleId, backHref }: ModuleTestRunnerProps) {
+  const [stage, setStage] = useState<'intro' | 'question' | 'review'>('intro')
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [answers, setAnswers] = useState<AnswerMap>({})
+
+  const totalQuestions = test.questions.length
+  const question = test.questions[currentIndex]
+  const progressPercent = totalQuestions
+    ? ((currentIndex + 1) / totalQuestions) * 100
+    : 0
+  const answeredCount = useMemo(
+    () => test.questions.filter((item) => isAnswered(item, answers)).length,
+    [answers, test.questions]
+  )
+
+  const setAnswer = (id: string, value: string) => {
+    setAnswers((prev) => ({ ...prev, [id]: value }))
+  }
+
+  const handleNext = () => {
+    if (currentIndex < totalQuestions - 1) {
+      setCurrentIndex((i) => i + 1)
+      return
+    }
+    setStage('review')
+  }
+
+  const handlePrev = () => {
+    if (currentIndex === 0) return
+    setCurrentIndex((i) => i - 1)
+  }
+
+  const handleRestart = () => {
+    setAnswers({})
+    setCurrentIndex(0)
+    setStage('intro')
+  }
+
+  if (totalQuestions === 0) {
+    return (
+      <div className="rounded-[28px] border border-slate-200 bg-white p-8 text-slate-700 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-200">
+        <p>This test has no questions yet. Check the source file at <code>files/tests/</code>.</p>
+        <Link
+          href={backHref}
+          className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950 transition-colors hover:bg-amber-400"
+        >
+          <ArrowLeft size={16} />
+          Back
+        </Link>
+      </div>
+    )
+  }
+
+  if (stage === 'intro') {
+    return (
+      <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50 dark:border-slate-700 dark:bg-slate-900/80 dark:shadow-2xl dark:shadow-black/20 sm:p-8">
+        <div className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400">
+          {test.kind === 'pretest' ? 'Pre-Test' : 'Post-Test'} · Module {test.moduleNumber}
+        </div>
+        <h1 className="mt-3 font-display text-3xl font-bold text-slate-900 dark:text-white sm:text-4xl">
+          {test.title}
+        </h1>
+        {test.subtitle && (
+          <p className="mt-2 text-base text-slate-600 dark:text-slate-300">{test.subtitle}</p>
+        )}
+
+        <div className="mt-6 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-slate-700 dark:border-slate-700 dark:bg-slate-950/50 dark:text-slate-200">
+          <div>📝 {totalQuestions} questions</div>
+          <div>
+            {test.kind === 'pretest'
+              ? '🧠 Self-check — see how much you already know before the lessons.'
+              : '✅ Reinforce what you learned. Open-ended questions invite reflection.'}
+          </div>
+          <div>📦 No grading — your answers stay on this device.</div>
+        </div>
+
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={() => setStage('question')}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-500 px-5 py-3 font-bold text-slate-950 transition-colors hover:bg-amber-400"
+          >
+            Start
+            <ChevronRight size={18} />
+          </button>
+          <Link
+            href={backHref}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            <ArrowLeft size={18} />
+            Back to Map
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (stage === 'review') {
+    return (
+      <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50 dark:border-slate-700 dark:bg-slate-900/80 dark:shadow-2xl dark:shadow-black/20 sm:p-8">
+        <div className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400">
+          Your Responses
+        </div>
+        <h1 className="mt-3 font-display text-3xl font-bold text-slate-900 dark:text-white">
+          {test.title}
+        </h1>
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          You answered {answeredCount} of {totalQuestions} questions.
+        </p>
+
+        <div className="mt-6 space-y-4">
+          {test.questions.map((q) => {
+            const value = answers[q.id]
+            const optionMatch = q.options?.find((option) => option.id === value)
+            const display =
+              optionMatch?.text ??
+              (value ? value : <span className="italic text-slate-500 dark:text-slate-400">No answer</span>)
+            return (
+              <div
+                key={q.id}
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-700 dark:bg-slate-950/50"
+              >
+                <div className="font-semibold text-slate-800 dark:text-white">
+                  {q.number}. {q.prompt}
+                </div>
+                <div className="mt-2 text-slate-700 dark:text-slate-200">
+                  <span className="font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
+                    Answer:
+                  </span>{' '}
+                  {display}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={handleRestart}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            <RotateCcw size={18} />
+            Take Again
+          </button>
+          <Link
+            href={backHref}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-500 px-5 py-3 font-bold text-slate-950 transition-colors hover:bg-amber-400"
+          >
+            <CheckCircle2 size={18} />
+            Done
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="sticky top-16 z-30 border-b border-slate-200 bg-white/95 pb-3 pt-2 backdrop-blur dark:border-slate-700 dark:bg-slate-950/95">
+        <ProgressBar value={progressPercent} height="sm" animated={false} color="gold" />
+        <div className="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+          <span>
+            Question {currentIndex + 1} of {totalQuestions}
+          </span>
+          <span>{answeredCount} answered</span>
+        </div>
+      </div>
+
+      <motion.div
+        key={question.id}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50 dark:border-slate-700 dark:bg-slate-900/80 dark:shadow-2xl dark:shadow-black/20 sm:p-8"
+      >
+        <div className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
+          {test.kind === 'pretest' ? 'Module' : 'Module'} {test.moduleNumber} · {test.kind === 'pretest' ? 'Pre-Test' : 'Post-Test'}
+        </div>
+        <h2 className="mt-3 font-display text-2xl font-semibold leading-snug text-slate-900 dark:text-white sm:text-3xl">
+          <span className="mr-2 text-amber-600 dark:text-amber-400">{question.number}.</span>
+          {question.prompt}
+        </h2>
+
+        <div className="mt-8">
+          {question.type === 'open' ? (
+            <div>
+              <label
+                htmlFor={`answer-${question.id}`}
+                className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500"
+              >
+                <Pencil size={14} />
+                Your answer
+              </label>
+              <textarea
+                id={`answer-${question.id}`}
+                value={answers[question.id] ?? ''}
+                onChange={(event) => setAnswer(question.id, event.target.value)}
+                placeholder="Type your answer here…"
+                rows={5}
+                className="mt-2 w-full rounded-2xl border border-slate-300 bg-white p-4 text-base text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-400/40 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500"
+              />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {question.options?.map((option) => {
+                const selected = answers[question.id] === option.id
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => setAnswer(question.id, option.id)}
+                    className={cn(
+                      'flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all',
+                      selected
+                        ? 'border-amber-500 bg-amber-100 dark:bg-amber-500/15'
+                        : 'border-slate-200 bg-white hover:border-amber-400 dark:border-slate-700 dark:bg-slate-900'
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl font-display text-lg font-bold uppercase transition-colors',
+                        selected
+                          ? 'bg-amber-500 text-slate-950'
+                          : 'bg-amber-100 text-amber-700 dark:bg-slate-800 dark:text-amber-300'
+                      )}
+                    >
+                      {option.id}
+                    </div>
+                    <span className="text-base text-slate-900 dark:text-slate-100">
+                      {option.text}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-8 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={handlePrev}
+            disabled={currentIndex === 0}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            <ArrowLeft size={16} />
+            Back
+          </button>
+          <button
+            type="button"
+            onClick={handleNext}
+            className="inline-flex items-center gap-2 rounded-2xl bg-amber-500 px-5 py-3 font-bold text-slate-950 transition-colors hover:bg-amber-400"
+          >
+            {currentIndex === totalQuestions - 1 ? 'Review answers' : 'Next'}
+            <ChevronRight size={18} />
+          </button>
+        </div>
+      </motion.div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-3 text-xs text-slate-500 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-400">
+        Tip: this {test.kind === 'pretest' ? 'pre-test' : 'post-test'} is self-graded.
+        Pre-tests check what you already know before lessons; post-tests prompt reflection
+        on what you learned. Module ID: {moduleId}.
+      </div>
+    </div>
+  )
+}

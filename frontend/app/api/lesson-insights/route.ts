@@ -29,6 +29,44 @@ const fallbackInsights = {
   ],
 }
 
+function normalizeText(value: string) {
+  return value.toLowerCase().replace(/\s+/g, ' ').trim()
+}
+
+function extractLiteralKeywordsFromText(text: string, limit = 20) {
+  const stopWords = new Set([
+    'that', 'this', 'with', 'from', 'into', 'there', 'their', 'about', 'where', 'which', 'while', 'would',
+    'could', 'should', 'have', 'been', 'were', 'they', 'them', 'your', 'yours', 'what', 'when', 'will', 'than',
+    'only', 'very', 'just', 'also', 'must', 'such', 'each', 'more', 'most', 'some', 'many', 'much', 'like',
+  ])
+  const phraseMatches = text.match(/\b[A-Za-z][A-Za-z'-]{2,}(?:\s+[A-Za-z][A-Za-z'-]{2,}){1,3}\b/g) ?? []
+  const singleMatches = text.match(/\b[A-Za-z][A-Za-z'-]{5,}\b/g) ?? []
+  const seen = new Set<string>()
+  const keywords: string[] = []
+
+  for (const match of [...phraseMatches, ...singleMatches]) {
+    const normalized = normalizeText(match).replace(/[^a-z'\s-]/g, '')
+    if (!normalized || seen.has(normalized)) continue
+    if (normalized.split(' ').some((token) => stopWords.has(token))) continue
+    seen.add(normalized)
+    keywords.push(match.trim())
+    if (keywords.length >= limit) break
+  }
+
+  if (keywords.length === 0) {
+    for (const match of singleMatches) {
+      const normalized = normalizeText(match)
+      if (seen.has(normalized)) continue
+      if (stopWords.has(normalized)) continue
+      seen.add(normalized)
+      keywords.push(match.trim())
+      if (keywords.length >= Math.min(8, limit)) break
+    }
+  }
+
+  return keywords
+}
+
 async function translateToFrench(text: string) {
   const endpoint = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=fr&dt=t&q=${encodeURIComponent(text)}`
   const response = await fetch(endpoint, { cache: 'no-store' })
@@ -44,19 +82,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing section text' }, { status: 400 })
     }
 
+    const extractedFallback = extractLiteralKeywordsFromText(text)
+
     const apiKey = process.env.TRANSLATION_GEMINI_API_KEY
     if (!apiKey) {
-      return NextResponse.json(fallbackInsights)
+      const translatedKeywords = await Promise.all(
+        extractedFallback.map(async (keyword) => ({
+          english: keyword,
+          french: await translateToFrench(keyword),
+        }))
+      )
+      return NextResponse.json({
+        keyIdeas: fallbackInsights.keyIdeas,
+        keywords: translatedKeywords.length > 0 ? translatedKeywords : fallbackInsights.keywords,
+      })
     }
 
     const prompt = [
       'You are helping learners review lesson content.',
       'Given a lesson section, return concise keywords in strict JSON.',
       'The output must stay tightly grounded in the provided section text only.',
+      'Every keyword must be copied EXACTLY from the section text (same words, no paraphrasing).',
       'Output schema:',
       '{"keywords": string[15-25]}',
       'Rules:',
-      '- Make keywords generous, but every keyword must be directly about concepts, terms, actions, laws, or procedures in this section.',
+      '- Make keywords generous, but every keyword must be a literal substring present in the section content.',
+      '- Do not invent, paraphrase, stem, or reword any keyword.',
       '- Do not add generic filler keywords unrelated to the section.',
       '- Prefer noun phrases and high-value study terms.',
       '- Return keywords in English only.',
@@ -85,22 +136,58 @@ export async function POST(request: Request) {
     )
 
     if (!response.ok) {
-      return NextResponse.json(fallbackInsights)
+      const translatedKeywords = await Promise.all(
+        extractedFallback.map(async (keyword) => ({
+          english: keyword,
+          french: await translateToFrench(keyword),
+        }))
+      )
+      return NextResponse.json({
+        keyIdeas: fallbackInsights.keyIdeas,
+        keywords: translatedKeywords.length > 0 ? translatedKeywords : fallbackInsights.keywords,
+      })
     }
 
     const data = (await response.json()) as GeminiResponse
     const raw = data.candidates?.[0]?.content?.parts?.[0]?.text
     if (!raw) {
-      return NextResponse.json(fallbackInsights)
+      const translatedKeywords = await Promise.all(
+        extractedFallback.map(async (keyword) => ({
+          english: keyword,
+          french: await translateToFrench(keyword),
+        }))
+      )
+      return NextResponse.json({
+        keyIdeas: fallbackInsights.keyIdeas,
+        keywords: translatedKeywords.length > 0 ? translatedKeywords : fallbackInsights.keywords,
+      })
     }
 
     const parsed = JSON.parse(raw) as InsightsPayload
-    const keywords = Array.isArray(parsed.keywords)
+    const sourceTextNormalized = normalizeText(text)
+    const keywordsRaw = Array.isArray(parsed.keywords)
       ? parsed.keywords.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
       : []
+    const seen = new Set<string>()
+    const literalKeywords = keywordsRaw.filter((keyword) => {
+      const normalizedKeyword = normalizeText(keyword)
+      if (!normalizedKeyword) return false
+      if (seen.has(normalizedKeyword)) return false
+      if (!sourceTextNormalized.includes(normalizedKeyword)) return false
+      if (normalizedKeyword.length < 4) return false
+      const tokenCount = normalizedKeyword.split(' ').length
+      if (tokenCount === 1) {
+        const wordRegex = new RegExp(`\\b${normalizedKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi')
+        const matches = text.match(wordRegex)
+        if (!matches || matches.length < 2) return false
+      }
+      seen.add(normalizedKeyword)
+      return true
+    })
+    const keywords = literalKeywords.length > 0 ? literalKeywords : extractedFallback
 
     const translatedKeywords = await Promise.all(
-      (keywords.length > 0 ? keywords : fallbackInsights.keywords.map((item) => item.english)).map(async (keyword) => ({
+      (keywords.length > 0 ? keywords : extractedFallback).map(async (keyword) => ({
         english: keyword,
         french: await translateToFrench(keyword),
       }))
@@ -108,7 +195,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       keyIdeas: fallbackInsights.keyIdeas,
-      keywords: translatedKeywords,
+      keywords: translatedKeywords.length > 0 ? translatedKeywords : fallbackInsights.keywords,
     })
   } catch {
     return NextResponse.json(fallbackInsights)

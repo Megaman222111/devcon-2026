@@ -7,6 +7,7 @@ import { AppShell } from '@/components/layout/app-shell'
 import { ModuleHeader } from '@/components/map/module-header'
 import { PathNode } from '@/components/map/path-node'
 import { ExamCard } from '@/components/map/exam-card'
+import { ModuleTestCard } from '@/components/map/module-test-card'
 import { useAppStore } from '@/lib/store'
 import { modules, lessonsForModule } from '@/lib/mock-data'
 import { staggerContainer, staggerItem } from '@/lib/motion-presets'
@@ -73,15 +74,26 @@ export default function HomePage() {
                 {/* Module Header */}
                 <ModuleHeader module={module} />
 
+                {/* Pre-Test card (before lessons) */}
+                {!module.locked && (
+                  <div className="mt-4">
+                    <ModuleTestCard
+                      moduleId={module.id}
+                      moduleNumber={module.number}
+                      kind="pretest"
+                    />
+                  </div>
+                )}
+
                 {/* Lesson Nodes - Zigzag Path */}
                 {!module.locked && (
-                  <div className="relative mt-8 flex flex-col items-center">
+                  <div className="relative mt-6 flex flex-col items-center">
                     {/* Nodes */}
                     <div className="flex flex-col items-center gap-6">
                       {lessons.map((lesson, index) => {
                         // Create zigzag pattern
                         const offset = index % 2 === 0 ? '-40px' : '40px'
-                        
+
                         return (
                           <motion.div
                             key={lesson.id}
@@ -105,9 +117,14 @@ export default function HomePage() {
                   </div>
                 )}
 
-                {/* Module Exam Card */}
+                {/* Post-Test + Module Exam */}
                 {!module.locked && (
-                  <div className="mt-8">
+                  <div className="mt-8 space-y-3">
+                    <ModuleTestCard
+                      moduleId={module.id}
+                      moduleNumber={module.number}
+                      kind="posttest"
+                    />
                     <ExamCard
                       moduleId={module.id}
                       moduleNumber={module.number}

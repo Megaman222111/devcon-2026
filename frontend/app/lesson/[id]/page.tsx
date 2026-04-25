@@ -15,30 +15,20 @@ async function resolveLessonMarkdownPath(id: string) {
   const lessonMeta = Object.values(lessonsForModule).flat().find((lesson) => lesson.id === id)
   if (!lessonMeta) return null
 
-  const moduleNumber = lessonMeta.number.split('.')[0]
-  const lessonNumber = lessonMeta.number
+  const moduleNumber = lessonMeta.moduleId.replace('mod-', '')
   const filesRoot = path.join(process.cwd(), '..', 'files')
-  const moduleFolder = path.join(filesRoot, `module-${moduleNumber}`)
+  const moduleFolder = path.join(filesRoot, `module_${moduleNumber}`)
 
   try {
     const moduleEntries = await fs.readdir(moduleFolder, { withFileTypes: true })
     const markdownEntry = moduleEntries.find(
-      (entry) => entry.isFile() && entry.name.endsWith('.md') && entry.name.startsWith(`${lessonNumber}-`)
+      (entry) =>
+        entry.isFile() &&
+        entry.name.endsWith('.md') &&
+        entry.name.startsWith(`${lessonMeta.filePrefix}_`)
     )
     if (markdownEntry) {
       return path.join(moduleFolder, markdownEntry.name)
-    }
-  } catch {
-    // Fall back to legacy root structure if module folder is unavailable.
-  }
-
-  try {
-    const rootEntries = await fs.readdir(filesRoot, { withFileTypes: true })
-    const markdownEntry = rootEntries.find(
-      (entry) => entry.isFile() && entry.name.endsWith('.md') && entry.name.startsWith(`${lessonNumber}-`)
-    )
-    if (markdownEntry) {
-      return path.join(filesRoot, markdownEntry.name)
     }
   } catch {
     return null
@@ -47,24 +37,29 @@ async function resolveLessonMarkdownPath(id: string) {
   return null
 }
 
-async function loadLessonMarkdown(id: string) {
+async function loadLessonMarkdown(id: string, fallbackTitle: string, fallbackModuleLabel: string) {
   const absolutePath = await resolveLessonMarkdownPath(id)
   if (!absolutePath) {
     return {
-      title: 'Lesson Coming Soon',
-      moduleLabel: 'Module',
-      sections: [{ heading: 'Lesson Coming Soon', markdown: 'This lesson will be added in a future update.' }],
+      title: fallbackTitle || 'Lesson Coming Soon',
+      moduleLabel: fallbackModuleLabel,
+      sections: [
+        {
+          heading: 'Lesson Coming Soon',
+          markdown: 'This lesson will be added in a future update.',
+        },
+      ],
     }
   }
 
   const source = await fs.readFile(absolutePath, 'utf8')
   const parsed = matter(source)
-  const title = typeof parsed.data.title === 'string' ? parsed.data.title : 'Lesson'
-  const moduleNumber = parsed.data.module
-  const moduleLabel = Number.isInteger(moduleNumber) ? `Module ${moduleNumber}` : 'Module'
+  const frontmatterTitle = typeof parsed.data.title === 'string' ? parsed.data.title : null
+  const headingTitle = parsed.content.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? null
+  const title = frontmatterTitle ?? headingTitle ?? fallbackTitle ?? 'Lesson'
   const sections = splitMarkdownIntoSections(parsed.content)
 
-  return { title, moduleLabel, sections }
+  return { title, moduleLabel: fallbackModuleLabel, sections }
 }
 
 function splitMarkdownIntoSections(markdown: string) {
@@ -110,24 +105,32 @@ function titleCaseFallback(markdown: string) {
 export default async function LessonPage({ params }: LessonPageProps) {
   const { id } = await params
   const lessonMeta = Object.values(lessonsForModule).flat().find((lesson) => lesson.id === id)
-  const lesson = await loadLessonMarkdown(id)
+  const moduleLabel = lessonMeta ? `Module ${lessonMeta.moduleId.replace('mod-', '')}` : 'Module'
+  const lesson = await loadLessonMarkdown(id, lessonMeta?.title ?? 'Lesson', moduleLabel)
 
   return (
     <AppShell showBottomNav={false} breadcrumb={{ module: lesson.moduleLabel, lesson: lesson.title }}>
-      <div className="max-w-5xl mx-auto px-4 py-6 pb-24">
+      <div className="mx-auto max-w-6xl px-4 py-6 pb-24">
         <Link
           href="/home"
-          className="inline-flex items-center gap-1.5 text-sm text-navy-400 hover:text-white transition-colors mb-6"
+          className="mb-6 inline-flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
         >
           <ArrowLeft size={16} />
           Back to Map
         </Link>
 
-        <div>
-          <div className="text-sm text-amber-500 font-semibold mb-2">LESSON {lessonMeta?.number ?? 'TBD'}</div>
-          <LessonSectionViewer lessonId={id} sections={lesson.sections} />
-        </div>
+        {lessonMeta && (
+          <div className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400">
+            Lesson {lessonMeta.number}
+          </div>
+        )}
 
+        <LessonSectionViewer
+          lessonId={id}
+          lessonTitle={lesson.title}
+          moduleLabel={lesson.moduleLabel}
+          sections={lesson.sections}
+        />
       </div>
     </AppShell>
   )

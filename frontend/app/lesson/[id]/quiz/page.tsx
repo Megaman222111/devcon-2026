@@ -85,78 +85,76 @@ export default function QuizPage() {
 
   return (
     <AppShell showBottomNav={false} breadcrumb={{ module: 'Module 2', lesson: 'Quiz' }}>
-      {/* Progress Bar */}
-      <div className="sticky top-16 z-40 bg-navy-800 border-b border-navy-600">
-        <ProgressBar value={progressPercent} height="sm" animated={false} />
-      </div>
+      <div className="mx-auto max-w-3xl px-4 pb-24">
+        <div className="sticky top-16 z-30 border-b border-slate-200 bg-white/95 pb-4 pt-2 backdrop-blur dark:border-slate-700 dark:bg-slate-950/95">
+          <ProgressBar value={progressPercent} height="sm" animated={false} />
+        </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <Link
-            href={`/lesson/${params.id}`}
-            className="flex items-center gap-1.5 text-sm text-navy-400 hover:text-white transition-colors"
-          >
-            <ArrowLeft size={16} />
-            Exit Quiz
-          </Link>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-navy-400">
-              Question {currentQuestion + 1}/{totalQuestions}
-            </span>
-            <HeartSystem lives={progress.hearts} size="sm" />
+        <div className="py-6">
+          <div className="mb-6 flex items-center justify-between">
+            <Link
+              href={`/lesson/${params.id}`}
+              className="inline-flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            >
+              <ArrowLeft size={16} />
+              Exit Quiz
+            </Link>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-slate-500 dark:text-slate-400">
+                Q {currentQuestion + 1} / {totalQuestions}
+              </span>
+              <HeartSystem lives={progress.hearts} size="sm" />
+            </div>
           </div>
-        </div>
 
-        {/* Question */}
-        <motion.div
-          key={currentQuestion}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h2 className="font-display font-semibold text-2xl text-black leading-snug">
-            {question.question}
-          </h2>
-        </motion.div>
-
-        {/* Answer Options */}
-        <div className="space-y-3">
-          {question.options.map((option) => (
-            <QuizCard
-              key={option.id}
-              letter={option.id}
-              text={option.text}
-              selected={selectedAnswer === option.id}
-              state={getAnswerState(option.id)}
-              disabled={answerSubmitted}
-              onClick={() => handleSelectAnswer(option.id)}
-            />
-          ))}
-        </div>
-
-        {/* Hint Button */}
-        {!answerSubmitted && (
-          <button className="mt-6 flex items-center gap-2 text-sm text-amber-500 hover:text-amber-400 transition-colors">
-            <Lightbulb size={16} />
-            Need a hint?
-          </button>
-        )}
-
-        {/* Submit Button */}
-        {!answerSubmitted && selectedAnswer && (
-          <motion.button
+          <motion.div
+            key={currentQuestion}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            onClick={handleSubmit}
-            className="mt-8 w-full py-4 bg-amber-500 hover:bg-amber-400 text-navy-900 rounded-xl font-bold text-lg transition-colors btn-glow"
+            className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50 dark:border-slate-700 dark:bg-slate-950/80 dark:shadow-2xl dark:shadow-black/20 sm:p-8"
           >
-            CHECK ANSWER
-          </motion.button>
-        )}
+            <div className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
+              Question {currentQuestion + 1}
+            </div>
+            <h2 className="mt-3 font-display text-3xl font-semibold leading-tight text-slate-900 dark:text-white">
+              {question.question}
+            </h2>
+
+            <div className="mt-8 space-y-3">
+              {question.options.map((option) => (
+                <QuizCard
+                  key={option.id}
+                  letter={option.id}
+                  text={option.text}
+                  selected={selectedAnswer === option.id}
+                  state={getAnswerState(option.id)}
+                  disabled={answerSubmitted}
+                  onClick={() => handleSelectAnswer(option.id)}
+                />
+              ))}
+            </div>
+
+            {!answerSubmitted && (
+              <button className="mt-6 inline-flex items-center gap-2 text-sm text-amber-600 transition-colors hover:text-amber-500 dark:text-amber-400 dark:hover:text-amber-300">
+                <Lightbulb size={16} />
+                Need a hint?
+              </button>
+            )}
+
+            {!answerSubmitted && selectedAnswer && (
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                onClick={handleSubmit}
+                className="mt-8 w-full rounded-2xl bg-amber-500 py-4 text-lg font-bold text-slate-950 transition-colors hover:bg-amber-400"
+              >
+                CHECK ANSWER
+              </motion.button>
+            )}
+          </motion.div>
+        </div>
       </div>
 
-      {/* Feedback Overlay */}
       <AnswerFeedback
         show={showFeedback}
         correct={isCorrect}

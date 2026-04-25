@@ -45,12 +45,12 @@ export default function ResultsPage() {
               className={`inline-flex items-center justify-center w-20 h-20 rounded-full ${
                 passed
                   ? 'bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg shadow-amber-500/30'
-                  : 'bg-navy-700'
+                  : 'bg-slate-200 dark:bg-slate-800'
               }`}
             >
               <Award
                 size={40}
-                className={passed ? 'text-navy-900' : 'text-navy-400'}
+                className={passed ? 'text-slate-950' : 'text-slate-500 dark:text-slate-400'}
               />
             </div>
           </motion.div>
@@ -61,7 +61,7 @@ export default function ResultsPage() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
             className={`font-display font-black text-4xl ${
-              passed ? 'text-amber-500' : 'text-white'
+              passed ? 'text-amber-600 dark:text-amber-500' : 'text-slate-900 dark:text-white'
             }`}
           >
             {passed ? 'LESSON COMPLETE!' : 'KEEP GOING'}
@@ -72,7 +72,7 @@ export default function ResultsPage() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="mt-2 text-navy-300"
+            className="mt-2 text-slate-600 dark:text-slate-300"
           >
             Lesson 2.4 - Use of Force
           </motion.p>
@@ -85,25 +85,25 @@ export default function ResultsPage() {
             className="mt-8 flex items-center justify-center gap-6"
           >
             <div className="text-center">
-              <div className="text-3xl font-display font-bold text-white">
+              <div className="text-3xl font-display font-bold text-slate-900 dark:text-white">
                 {correct}/{total}
               </div>
-              <div className="text-sm text-navy-400">Correct</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">Correct</div>
             </div>
-            <div className="w-px h-12 bg-navy-600" />
+            <div className="w-px h-12 bg-slate-200 dark:bg-slate-700" />
             <div className="text-center">
-              <div className="flex items-center gap-1 text-3xl font-display font-bold text-amber-400">
-                <Star size={24} className="fill-amber-400" />+{correct * 25}
+              <div className="flex items-center gap-1 text-3xl font-display font-bold text-amber-600 dark:text-amber-400">
+                <Star size={24} className="fill-amber-500 dark:fill-amber-400" />+{correct * 25}
               </div>
-              <div className="text-sm text-navy-400">XP Earned</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">XP Earned</div>
             </div>
-            <div className="w-px h-12 bg-navy-600" />
+            <div className="w-px h-12 bg-slate-200 dark:bg-slate-700" />
             <div className="text-center">
-              <div className="flex items-center gap-1 text-3xl font-display font-bold text-amber-400">
-                <Flame size={24} className="fill-amber-400 text-amber-400" />
+              <div className="flex items-center gap-1 text-3xl font-display font-bold text-amber-600 dark:text-amber-400">
+                <Flame size={24} className="fill-amber-500 text-amber-500 dark:fill-amber-400 dark:text-amber-400" />
                 {progress.streak}
               </div>
-              <div className="text-sm text-navy-400">Streak</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">Streak</div>
             </div>
           </motion.div>
 
@@ -115,8 +115,8 @@ export default function ResultsPage() {
             className="mt-8 px-4"
           >
             <div className="flex items-center justify-between mb-2 text-sm">
-              <span className="text-navy-400">Level {progress.level}</span>
-              <span className="text-amber-400">
+              <span className="text-slate-500 dark:text-slate-400">Level {progress.level}</span>
+              <span className="text-amber-600 dark:text-amber-400">
                 {progress.xp % 150} / 150 XP
               </span>
             </div>
@@ -124,7 +124,7 @@ export default function ResultsPage() {
               value={progress.xp % 150}
               max={150}
               height="lg"
-              color="amber"
+              color="gold"
             />
           </motion.div>
 
@@ -137,7 +137,7 @@ export default function ResultsPage() {
           >
             <Link
               href="/home"
-              className="flex items-center justify-center gap-2 w-full py-4 bg-amber-500 hover:bg-amber-400 text-navy-900 rounded-xl font-bold text-lg transition-colors btn-glow"
+              className="flex items-center justify-center gap-2 w-full py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-2xl font-bold text-lg transition-colors"
             >
               {passed ? 'NEXT LESSON' : 'BACK TO MAP'}
               <ChevronRight size={20} />
@@ -145,7 +145,7 @@ export default function ResultsPage() {
             {!passed && (
               <Link
                 href="/lesson/l-2-4/quiz"
-                className="flex items-center justify-center gap-2 w-full py-4 bg-navy-700 hover:bg-navy-600 text-white rounded-xl font-bold text-lg transition-colors"
+                className="flex items-center justify-center gap-2 w-full py-4 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-900 rounded-2xl font-bold text-lg transition-colors dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-700 dark:text-white"
               >
                 <RotateCcw size={18} />
                 TRY AGAIN

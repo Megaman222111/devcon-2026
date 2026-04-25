@@ -1,0 +1,52 @@
+[
+  {
+    "id": "robbery_observe",
+    "scene": "Robbery Response – Observe and Assess",
+    "prompt": "Professional security guard training video. A uniformed male security guard in a dark navy blue uniform with a silver badge and black utility belt stands near a retail store entrance, calmly observing a suspicious individual near the cash registers. Cinematic wide-angle shot, realistic fluorescent store lighting with warm accent lamps. The guard maintains professional composure, keeps safe distance, scans the environment without drawing attention. Realistic big-box retail store interior with product shelves and checkout lanes visible. Steady handheld camera, documentary training video style, high-definition 720p."
+  },
+  {
+    "id": "robbery_radio",
+    "scene": "Robbery Response – Radio for Backup",
+    "prompt": "Professional security guard training video. A uniformed security guard in a dark navy blue uniform crouches slightly behind a store display, speaking quietly into a shoulder-mounted two-way radio. Medium close-up with shallow depth of field, cinematic overhead lighting with soft fill. The guard's face shows calm professionalism, lips moving with measured speech. A name badge and security patch are visible on the uniform. Supermarket store interior background softly blurred. Steady camera, training video documentary style."
+  },
+  {
+    "id": "robbery_deescalate",
+    "scene": "Robbery Response – Verbal De-escalation",
+    "prompt": "Professional security guard training video. A uniformed security guard in a dark navy blue uniform stands facing a visibly agitated individual in a retail store aisle, both hands raised open at chest height in a calm, non-threatening gesture. Cinematic medium shot, warm overhead store lighting. The guard maintains safe distance of approximately two metres, keeps open palms visible, uses steady eye contact, speaks with measured calm. Realistic store shelving and signage in background. Steady camera, clear subject framing, high-definition training video style."
+  },
+  {
+    "id": "robbery_evacuate",
+    "scene": "Robbery Response – Evacuate Bystanders",
+    "prompt": "Professional security guard training video. A uniformed security guard in a dark navy blue uniform with a visible badge calmly directs a small group of store customers toward a clearly marked emergency exit. Wide-angle medium shot, bright indoor retail lighting. The guard uses confident, broad directional hand gestures, maintains a calm but authoritative demeanour, checks over their shoulder, ensures orderly movement. Green illuminated EXIT signs visible overhead. Modern retail store interior. Steady documentary-style camera, professional training video aesthetic."
+  },
+  {
+    "id": "robbery_secure",
+    "scene": "Robbery Response – Secure the Area",
+    "prompt": "Professional security guard training video. A uniformed security guard in dark navy uniform stretches yellow barrier tape between two store fixtures to establish a perimeter around an incident area. Cinematic medium-wide shot, clinical overhead lighting with slight warm tone. The guard moves methodically, directs lingering bystanders away with a firm but polite hand gesture, checks surroundings, stands ready to meet arriving law enforcement. Realistic retail store interior with product displays. Steady camera, professional documentary training style."
+  },
+  {
+    "id": "suspicious_observe",
+    "scene": "Suspicious Person – Observe Without Confronting",
+    "prompt": "Professional security guard training video. A uniformed security guard in a dark navy uniform with a security patch on the shoulder stands discreetly near a pillar in a commercial parking lot, subtly observing a person loitering near a building entrance from a distance. Wide-angle exterior shot, bright midday sunlight with natural shadows. Guard maintains a relaxed but attentive posture, uses peripheral vision, avoids direct stare. Modern commercial building exterior, parked vehicles in background. Steady camera, cinematic lighting, high-definition training video style."
+  },
+  {
+    "id": "suspicious_approach",
+    "scene": "Suspicious Person – Professional Approach",
+    "prompt": "Professional security guard training video. A uniformed security guard in a dark navy blue uniform walks toward a suspicious-looking individual standing near a mall corridor in a confident, non-threatening manner. Medium tracking shot, bright shopping mall overhead lighting with warm ambient tones. Guard approaches at a slight angle, keeps open body language, introduces themselves with a visible badge point and a polite nod, speaks clearly. Modern shopping mall interior with storefronts and seating visible in background. Smooth steady-cam style, professional training video aesthetic."
+  },
+  {
+    "id": "fire_evacuation",
+    "scene": "Emergency Fire Evacuation",
+    "prompt": "Professional security guard training video. A uniformed security guard in a dark navy uniform pulls a red fire alarm station mounted on an office corridor wall, then immediately turns and guides a group of office workers briskly toward a glowing green emergency exit sign at the end of a hallway. Medium-wide cinematic shot, emergency red strobe lighting pulsing against neutral corridor walls, creating dramatic shadows. Guard shouts clear, calm verbal instructions, checks each doorway as they pass, ensures no one is left behind. Modern office building interior with fire safety signage. Steady camera, documentary style, high-definition."
+  },
+  {
+    "id": "medical_emergency",
+    "scene": "Medical Emergency Response",
+    "prompt": "Professional security guard training video. A uniformed security guard in dark navy blue uniform kneels beside a collapsed individual on the polished floor of a modern building lobby, places two fingers on the person's neck to check for a pulse, then rises and retrieves a white AED defibrillator from a wall-mounted case. Close-medium cinematic shot, clean institutional fluorescent lighting. Guard speaks calmly to concerned bystanders, presses radio button to call for an ambulance. Lobby environment with reception desk and elevator doors visible in background. Steady camera, professional training video style."
+  },
+  {
+    "id": "incident_report",
+    "scene": "Incident Report Documentation",
+    "prompt": "Professional security guard training video. A uniformed security guard in a dark navy blue uniform sits at a security monitoring desk, writing notes on a printed incident report form and entering information into a desktop computer terminal. Medium close-up, clean cool-white office lighting. Guard references handwritten field notes, uses a smartphone to photograph a printed document as evidence, consults a colleague briefly. Background shows multiple CCTV monitor screens displaying building footage. Clean, professional security control room setting. Steady camera, documentary training video style, high-definition 720p."
+  }
+]

@@ -1,0 +1,5 @@
+# Ending a shift
+
+When the time comes for your shift to end you will want to review your notes for information which requires passing on to the individual who will relieve you at your post. This may include details about incidents which occurred in the course of your shift or information pertaining to the premises (e.g., a burned out light which has yet to be replaced). Advise the individual about any special events which may be occurring (e.g., late night gathering in an office building) or anticipated personnel arrivals (e.g., a contractor expected to come fix a broken cooler unit). This information may be contained in the post orders but sometimes (as in the case of equipment breakdown) it is not always possible to update the post orders prior to the arrival of new shift personnel.
+
+Prior to leaving, check that your replacement is ready for work (e.g., make sure they are at their post prior to leaving) and that they have no further questions for you, and advise them when you are leaving the post.

@@ -1,0 +1,35 @@
+.readingContainer {
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  padding-top: 1.5rem;
+  padding-bottom: 6rem;
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 2rem;
+  align-items: start;
+}
+
+.rightPanel {
+  position: sticky;
+  top: 5rem;
+  max-height: calc(100vh - 9rem);
+  overflow-y: auto;
+}
+
+[dir='rtl'] .panels {
+  grid-template-columns: 320px minmax(0, 1fr);
+}
+
+@media (max-width: 1023px) {
+  .panels {
+    grid-template-columns: 1fr;
+  }
+
+  .rightPanel {
+    display: none;
+  }
+}

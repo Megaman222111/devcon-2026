@@ -189,28 +189,28 @@ export function InteractiveVideoQuestion({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.18 }}
-              className="absolute inset-0 flex flex-col items-stretch bg-gradient-to-b from-black/85 via-black/55 to-black/30 px-4 pt-4 sm:px-6 sm:pt-6"
+              className="absolute inset-0 flex items-center justify-center bg-black/40 px-3 py-3 backdrop-blur-[2px]"
             >
               <motion.div
-                initial={{ y: -16, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: -16, opacity: 0 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
-                className="mx-auto w-full max-w-2xl rounded-2xl border border-white/10 bg-white/95 p-4 shadow-2xl shadow-black/40 backdrop-blur dark:bg-slate-900/95 sm:p-5"
+                initial={{ y: -8, opacity: 0, scale: 0.97 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
+                exit={{ y: -8, opacity: 0, scale: 0.97 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                className="w-full max-w-sm rounded-xl border border-white/10 bg-slate-900/85 p-3 text-white shadow-xl shadow-black/30 backdrop-blur"
               >
                 <div className="flex items-center justify-between">
-                  <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-400">
+                  <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-amber-300">
                     Checkpoint · {formatTime(activeCheckpoint.timeSeconds)}
                   </div>
-                  <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  <div className="text-[9px] font-medium text-slate-300">
                     {completed.size + 1} / {sortedCheckpoints.length}
                   </div>
                 </div>
-                <div className="mt-2 text-base font-semibold leading-snug text-slate-900 dark:text-white sm:text-lg">
+                <div className="mt-1.5 text-[13px] font-semibold leading-snug">
                   {activeCheckpoint.prompt}
                 </div>
 
-                <div className="mt-3 grid gap-2">
+                <div className="mt-2 grid gap-1.5">
                   {activeCheckpoint.options.map((option) => {
                     const isSelected = selected === option.id
                     const showCorrect = feedback?.kind === 'correct' && option.id === activeCheckpoint.correctId
@@ -224,29 +224,29 @@ export function InteractiveVideoQuestion({
                         onClick={() => handleSelect(option.id)}
                         disabled={!!feedback}
                         className={cn(
-                          'flex w-full items-center gap-3 rounded-xl border-2 px-3 py-2.5 text-left text-sm transition-all',
-                          showCorrect && 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/15',
-                          showIncorrect && 'border-rose-500 bg-rose-50 dark:bg-rose-500/15',
-                          showCorrectHint && 'border-emerald-400/70 bg-emerald-50/70 dark:bg-emerald-500/10',
+                          'flex w-full items-start gap-2 rounded-md border px-2 py-1.5 text-left text-[12px] leading-snug transition-colors',
+                          showCorrect && 'border-emerald-400 bg-emerald-500/20',
+                          showIncorrect && 'border-rose-400 bg-rose-500/20',
+                          showCorrectHint && 'border-emerald-400/60 bg-emerald-500/10',
                           !showCorrect && !showIncorrect && !showCorrectHint && isSelected &&
-                            'border-amber-500 bg-amber-100 dark:bg-amber-500/15',
+                            'border-amber-400 bg-amber-400/20',
                           !showCorrect && !showIncorrect && !showCorrectHint && !isSelected &&
-                            'border-slate-300 bg-white hover:border-amber-400 dark:border-slate-700 dark:bg-slate-950'
+                            'border-white/15 bg-white/5 hover:border-amber-400/60 hover:bg-white/10'
                         )}
                       >
                         <div
                           className={cn(
-                            'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg font-bold uppercase',
+                            'mt-px flex h-5 w-5 flex-shrink-0 items-center justify-center rounded text-[10px] font-bold uppercase',
                             isSelected
-                              ? 'bg-amber-500 text-slate-950'
-                              : 'bg-amber-100 text-amber-700 dark:bg-slate-800 dark:text-amber-300'
+                              ? 'bg-amber-400 text-slate-950'
+                              : 'bg-white/10 text-amber-200'
                           )}
                         >
                           {option.id}
                         </div>
-                        <span className="flex-1 text-slate-900 dark:text-white">{option.text}</span>
-                        {showCorrect && <CheckCircle2 size={18} className="text-emerald-500" />}
-                        {showIncorrect && <XCircle size={18} className="text-rose-500" />}
+                        <span className="flex-1">{option.text}</span>
+                        {showCorrect && <CheckCircle2 size={14} className="mt-px text-emerald-300" />}
+                        {showIncorrect && <XCircle size={14} className="mt-px text-rose-300" />}
                       </button>
                     )
                   })}
@@ -257,28 +257,28 @@ export function InteractiveVideoQuestion({
                     type="button"
                     onClick={handleSubmit}
                     disabled={!selected}
-                    className="mt-3 w-full rounded-xl bg-amber-500 py-2.5 text-sm font-bold text-slate-950 transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="mt-2 w-full rounded-md bg-amber-400 py-1.5 text-[12px] font-bold text-slate-950 transition-colors hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    Submit answer
+                    Submit
                   </button>
                 )}
 
                 {feedback?.kind === 'correct' && (
-                  <div className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
-                    <CheckCircle2 size={16} />
-                    Correct — resuming the video…
+                  <div className="mt-2 flex items-center gap-1.5 rounded-md bg-emerald-500/15 px-2 py-1 text-[11px] font-semibold text-emerald-300">
+                    <CheckCircle2 size={12} />
+                    Correct — resuming…
                   </div>
                 )}
 
                 {feedback?.kind === 'incorrect' && (
-                  <div className="mt-3 flex items-center gap-2 rounded-xl bg-rose-500/10 px-3 py-2 text-sm font-semibold text-rose-700 dark:text-rose-300">
-                    <RotateCcw size={16} />
-                    Not quite — rewinding to {formatTime(feedback.rewindTo)}.
+                  <div className="mt-2 flex items-center gap-1.5 rounded-md bg-rose-500/15 px-2 py-1 text-[11px] font-semibold text-rose-300">
+                    <RotateCcw size={12} />
+                    Rewinding to {formatTime(feedback.rewindTo)}…
                   </div>
                 )}
 
                 {activeCheckpoint.explanation && feedback && (
-                  <div className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                  <div className="mt-1.5 text-[11px] leading-snug text-slate-300">
                     {activeCheckpoint.explanation}
                   </div>
                 )}

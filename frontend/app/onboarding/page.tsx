@@ -79,7 +79,6 @@ export default function OnboardingPage() {
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1)
     } else {
-      // Create account
       setUser({
         id: Math.random().toString(36).slice(2),
         name: name.trim(),

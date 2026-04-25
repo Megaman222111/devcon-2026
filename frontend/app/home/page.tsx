@@ -1,11 +1,13 @@
 'use client'
 
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Flame, ChevronRight } from 'lucide-react'
 import { AppShell } from '@/components/layout/app-shell'
 import { ModuleHeader } from '@/components/map/module-header'
-import { PathNode } from '@/components/map/path-node'
+import { PathNode, type NodeState } from '@/components/map/path-node'
 import { ExamCard } from '@/components/map/exam-card'
 import { ModuleTestCard } from '@/components/map/module-test-card'
 import { useAppStore } from '@/lib/store'
@@ -13,8 +15,20 @@ import { modules, lessonsForModule } from '@/lib/mock-data'
 import { staggerContainer, staggerItem } from '@/lib/motion-presets'
 
 export default function HomePage() {
+  const router = useRouter()
   const progress = useAppStore((state) => state.progress)
   const user = useAppStore((state) => state.user)
+  const completedLessonsSet = useMemo(
+    () => new Set(progress.completedLessons),
+    [progress.completedLessons]
+  )
+  const orderedLessons = useMemo(
+    () =>
+      modules.flatMap((module) => lessonsForModule[module.id] ?? []),
+    []
+  )
+  const nextLesson = orderedLessons.find((lesson) => !completedLessonsSet.has(lesson.id))
+  const currentTagLabel = progress.completedLessons.length > 0 ? 'CONTINUE HERE' : 'START'
 
   return (
     <AppShell>
@@ -56,12 +70,20 @@ export default function HomePage() {
         >
           {modules.map((module) => {
             const lessons = lessonsForModule[module.id] || []
-            const isModuleComplete = module.completedLessons === module.lessonsCount
+            const completedLessons = lessons.filter((lesson) =>
+              completedLessonsSet.has(lesson.id)
+            ).length
+            const isModuleComplete =
+              lessons.length > 0 && completedLessons === module.lessonsCount
+            const moduleWithProgress = {
+              ...module,
+              completedLessons,
+            }
 
             return (
               <motion.section key={module.id} variants={staggerItem}>
                 {/* Module Header */}
-                <ModuleHeader module={module} />
+                <ModuleHeader module={moduleWithProgress} />
 
                 {/* Pre-Test card (before lessons) */}
                 {!module.locked && (
@@ -82,6 +104,13 @@ export default function HomePage() {
                       {lessons.map((lesson, index) => {
                         // Create zigzag pattern
                         const offset = index % 2 === 0 ? '-40px' : '40px'
+                        const lessonState: NodeState = completedLessonsSet.has(lesson.id)
+                          ? 'completed'
+                          : nextLesson?.id === lesson.id
+                          ? 'current'
+                          : 'upcoming'
+                        const canOpenLesson =
+                          lessonState === 'current' || lessonState === 'completed'
 
                         return (
                           <motion.div
@@ -91,14 +120,22 @@ export default function HomePage() {
                             transition={{ delay: index * 0.1 }}
                             style={{ marginLeft: offset }}
                           >
-                            <Link href={`/lesson/${lesson.id}`}>
-                              <PathNode
-                                state={lesson.state}
-                                lessonNumber={lesson.number}
-                                lessonTitle={lesson.title}
-                                xp={lesson.xp}
-                              />
-                            </Link>
+                            <PathNode
+                              state={lessonState}
+                              lessonNumber={lesson.number}
+                              lessonTitle={lesson.title}
+                              xp={lesson.xp}
+                              currentTagLabel={
+                                lessonState === 'current' ? currentTagLabel : undefined
+                              }
+                              onClick={
+                                canOpenLesson
+                                  ? () => {
+                                      router.push(`/lesson/${lesson.id}`)
+                                    }
+                                  : undefined
+                              }
+                            />
                           </motion.div>
                         )
                       })}

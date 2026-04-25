@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
@@ -8,6 +8,7 @@ import { Award, ChevronRight, RotateCcw, Star, Flame } from 'lucide-react'
 import { AppShell } from '@/components/layout/app-shell'
 import { ProgressBar } from '@/components/gamification/progress-bar'
 import { useAppStore } from '@/lib/store'
+import { lessonsForModule } from '@/lib/mock-data'
 
 export default function ResultsPage() {
   const params = useParams<{ id: string }>()
@@ -19,11 +20,17 @@ export default function ResultsPage() {
   const score = Math.round((correct / total) * 100)
   const passed = score >= 70
   const earnedLightning = Math.max(0, correct * 20)
+  const lessonMeta = useMemo(
+    () => Object.values(lessonsForModule).flat().find((lesson) => lesson.id === lessonId),
+    [lessonId]
+  )
 
   const progress = useAppStore((state) => state.progress)
   const triggerConfetti = useAppStore((state) => state.triggerConfetti)
   const addXP = useAppStore((state) => state.addXP)
   const addToast = useAppStore((state) => state.addToast)
+  const markLessonComplete = useAppStore((state) => state.markLessonComplete)
+  const markModuleComplete = useAppStore((state) => state.markModuleComplete)
 
   useEffect(() => {
     if (passed) {
@@ -40,6 +47,32 @@ export default function ResultsPage() {
     addToast({ type: 'xp-gain', message: `+${earnedLightning} lightning from quiz results.` })
     window.sessionStorage.setItem(rewardKey, '1')
   }, [addToast, addXP, attemptId, earnedLightning, lessonId])
+
+  useEffect(() => {
+    if (!passed || !lessonId) return
+    if (progress.completedLessons.includes(lessonId)) return
+
+    markLessonComplete(lessonId)
+
+    const moduleId = lessonMeta?.moduleId
+    if (moduleId) {
+      const moduleLessons = lessonsForModule[moduleId] ?? []
+      const completedSet = new Set([...progress.completedLessons, lessonId])
+      const isModuleComplete =
+        moduleLessons.length > 0 && moduleLessons.every((lesson) => completedSet.has(lesson.id))
+
+      if (isModuleComplete) {
+        markModuleComplete(moduleId)
+      }
+    }
+  }, [
+    lessonId,
+    lessonMeta?.moduleId,
+    markLessonComplete,
+    markModuleComplete,
+    passed,
+    progress.completedLessons,
+  ])
 
   return (
     <AppShell showBottomNav={false} showStats={false}>
@@ -90,7 +123,7 @@ export default function ResultsPage() {
             transition={{ delay: 0.4 }}
             className="mt-2 text-slate-600 dark:text-slate-300"
           >
-            Lesson 2.4 - Use of Force
+            {lessonMeta ? `Lesson ${lessonMeta.number} - ${lessonMeta.title}` : 'Lesson Results'}
           </motion.p>
 
           {/* Stats */}
@@ -160,7 +193,7 @@ export default function ResultsPage() {
             </Link>
             {!passed && (
               <Link
-                href="/lesson/l-2-4/quiz"
+                href={lessonId ? `/lesson/${lessonId}/quiz` : '/home'}
                 className="flex items-center justify-center gap-2 w-full py-4 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-900 rounded-2xl font-bold text-lg transition-colors dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-700 dark:text-white"
               >
                 <RotateCcw size={18} />

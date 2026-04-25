@@ -11,6 +11,7 @@ interface PathNodeProps {
   lessonNumber: string
   lessonTitle: string
   xp?: number
+  currentTagLabel?: string
   onClick?: () => void
   className?: string
 }
@@ -63,12 +64,13 @@ export function PathNode({
   lessonNumber,
   lessonTitle,
   xp,
+  currentTagLabel,
   onClick,
   className,
 }: PathNodeProps) {
   const config = stateConfig[state]
   const Icon = config.icon
-  const isInteractive = state === 'current' || state === 'completed' || state === 'upcoming'
+  const isInteractive = state === 'current' || state === 'completed'
 
   return (
     <motion.button
@@ -111,9 +113,9 @@ export function PathNode({
           <motion.div
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-accent text-accent-foreground text-xs font-bold rounded-xl whitespace-nowrap shadow-md"
+            className="absolute -top-8 left-1/2 -translate-x-1/2 rounded-xl bg-accent px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] whitespace-nowrap text-accent-foreground shadow-md"
           >
-            START
+            {currentTagLabel ?? 'START'}
             <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-accent rotate-45" />
           </motion.div>
         )}

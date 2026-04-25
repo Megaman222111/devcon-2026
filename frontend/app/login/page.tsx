@@ -16,9 +16,9 @@ export default function LoginPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
-    // Mock login - in real app would validate credentials
+    // Mock login
     setUser({
-      id: '1',
+      id: 'local-user',
       name: email.split('@')[0],
       email,
       language: 'en',

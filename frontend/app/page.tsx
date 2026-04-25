@@ -38,7 +38,7 @@ export default function SplashPage() {
             transition={{ delay: 0.2, duration: 0.4 }}
             className="mt-8 font-extrabold text-3xl sm:text-4xl text-foreground tracking-tight"
           >
-            ABST Training
+            TrainSecureAI
           </motion.h1>
 
           {/* Subtitle */}

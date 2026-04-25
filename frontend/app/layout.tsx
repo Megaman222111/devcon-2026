@@ -18,7 +18,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'ABST Training | Alberta Basic Security Guard Training',
+  title: 'TrainSecureAI | Alberta Basic Security Guard Training',
   description: 'Gamified digital learning platform for Alberta Basic Security Training. Master security procedures through interactive lessons, AI scenarios, and earn badges.',
   generator: 'v0.app',
 }

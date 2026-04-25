@@ -59,7 +59,7 @@ export function TopNav({
           <Link href="/home" className="flex items-center gap-2.5 group">
             <ShieldLogo size={32} />
             <span className="hidden sm:block font-bold text-lg text-foreground group-hover:text-primary transition-colors">
-              ABST
+              TrainSecureAI
             </span>
           </Link>
         </div>

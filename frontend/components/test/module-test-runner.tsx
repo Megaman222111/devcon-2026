@@ -17,9 +17,18 @@ interface ModuleTestRunnerProps {
 type AnswerMap = Record<string, string>
 
 function isAnswered(question: ModuleTestQuestion, answers: AnswerMap) {
+  if (question.type === 'video') return true
   const value = answers[question.id]
   if (value === undefined || value === null) return false
   return value.toString().trim().length > 0
+}
+
+function VideoQuestionPlaceholder() {
+  return (
+    <div className="overflow-hidden rounded-[28px] border border-slate-900/80 bg-black shadow-[0_24px_80px_-40px_rgba(0,0,0,0.8)]">
+      <div className="aspect-video w-full" />
+    </div>
+  )
 }
 
 export function ModuleTestRunner({ test, moduleId, backHref }: ModuleTestRunnerProps) {
@@ -137,6 +146,9 @@ export function ModuleTestRunner({ test, moduleId, backHref }: ModuleTestRunnerP
             const value = answers[q.id]
             const optionMatch = q.options?.find((option) => option.id === value)
             const display =
+              q.type === 'video' ? (
+                <span className="italic text-slate-500 dark:text-slate-400">Blank video slot</span>
+              ) :
               optionMatch?.text ??
               (value ? value : <span className="italic text-slate-500 dark:text-slate-400">No answer</span>)
             return (
@@ -206,7 +218,14 @@ export function ModuleTestRunner({ test, moduleId, backHref }: ModuleTestRunnerP
         </h2>
 
         <div className="mt-8">
-          {question.type === 'open' ? (
+          {question.type === 'video' ? (
+            <div className="space-y-3">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Video placeholder
+              </div>
+              <VideoQuestionPlaceholder />
+            </div>
+          ) : question.type === 'open' ? (
             <div>
               <label
                 htmlFor={`answer-${question.id}`}

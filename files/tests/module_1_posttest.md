@@ -15,3 +15,7 @@
 **4.** Section of the SSIA addresses the wearing of uniforms and carrying of weapons by security professionals.
 
 **5.** is the word used to describe the conduct of a security professional.
+
+**6.** What is one reason professionalism matters in the security industry?
+
+**7.** Who should you contact if you are unsure whether an action is allowed under company policy?

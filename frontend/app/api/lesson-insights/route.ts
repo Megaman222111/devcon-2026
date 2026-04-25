@@ -21,11 +21,11 @@ interface InsightsPayload {
 const fallbackInsights = {
   keyIdeas: ['Review the section and focus on core concepts and practical terms.'],
   keywords: [
-    { english: 'security professional', french: 'professionnel de la securite' },
-    { english: 'observation', french: 'observation' },
-    { english: 'reporting', french: 'rapport' },
-    { english: 'compliance', french: 'conformite' },
-    { english: 'safety', french: 'securite' },
+    { english: 'security professional', translated: 'professionnel de la securite' },
+    { english: 'observation', translated: 'observation' },
+    { english: 'reporting', translated: 'rapport' },
+    { english: 'compliance', translated: 'conformite' },
+    { english: 'safety', translated: 'securite' },
   ],
 }
 
@@ -67,21 +67,31 @@ function extractLiteralKeywordsFromText(text: string, limit = 20) {
   return keywords
 }
 
-async function translateToFrench(text: string) {
-  const endpoint = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=fr&dt=t&q=${encodeURIComponent(text)}`
-  const response = await fetch(endpoint, { cache: 'no-store' })
-  if (!response.ok) return text
-  const data = (await response.json()) as Array<Array<[string]>>
-  return (data[0] ?? []).map((chunk) => chunk[0]).join('') || text
+async function translateKeyword(text: string, targetLang: string) {
+  try {
+    const endpoint = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${encodeURIComponent(targetLang)}&dt=t&q=${encodeURIComponent(text)}`
+    const response = await fetch(endpoint, { cache: 'no-store' })
+    if (!response.ok) return text
+    const data = (await response.json()) as Array<Array<[string]>>
+    return (data[0] ?? []).map((chunk) => chunk[0]).join('') || text
+  } catch {
+    return text
+  }
 }
 
 export async function POST(request: Request) {
+  let resolvedTargetLang = 'fr'
   try {
-    const { text, heading } = (await request.json()) as { text?: string; heading?: string }
+    const { text, heading, targetLang } = (await request.json()) as {
+      text?: string
+      heading?: string
+      targetLang?: string
+    }
     if (!text?.trim()) {
       return NextResponse.json({ error: 'Missing section text' }, { status: 400 })
     }
 
+    resolvedTargetLang = targetLang?.trim() || 'fr'
     const extractedFallback = extractLiteralKeywordsFromText(text)
 
     const apiKey = process.env.TRANSLATION_GEMINI_API_KEY
@@ -89,7 +99,7 @@ export async function POST(request: Request) {
       const translatedKeywords = await Promise.all(
         extractedFallback.map(async (keyword) => ({
           english: keyword,
-          french: await translateToFrench(keyword),
+          translated: await translateKeyword(keyword, resolvedTargetLang),
         }))
       )
       return NextResponse.json({
@@ -139,7 +149,7 @@ export async function POST(request: Request) {
       const translatedKeywords = await Promise.all(
         extractedFallback.map(async (keyword) => ({
           english: keyword,
-          french: await translateToFrench(keyword),
+          translated: await translateKeyword(keyword, resolvedTargetLang),
         }))
       )
       return NextResponse.json({
@@ -154,7 +164,7 @@ export async function POST(request: Request) {
       const translatedKeywords = await Promise.all(
         extractedFallback.map(async (keyword) => ({
           english: keyword,
-          french: await translateToFrench(keyword),
+          translated: await translateKeyword(keyword, resolvedTargetLang),
         }))
       )
       return NextResponse.json({
@@ -189,7 +199,7 @@ export async function POST(request: Request) {
     const translatedKeywords = await Promise.all(
       (keywords.length > 0 ? keywords : extractedFallback).map(async (keyword) => ({
         english: keyword,
-        french: await translateToFrench(keyword),
+        translated: await translateKeyword(keyword, resolvedTargetLang),
       }))
     )
 
@@ -198,6 +208,15 @@ export async function POST(request: Request) {
       keywords: translatedKeywords.length > 0 ? translatedKeywords : fallbackInsights.keywords,
     })
   } catch {
-    return NextResponse.json(fallbackInsights)
+    const translatedKeywords = await Promise.all(
+      fallbackInsights.keywords.map(async (keyword) => ({
+        english: keyword.english,
+        translated: await translateKeyword(keyword.english, resolvedTargetLang),
+      }))
+    )
+    return NextResponse.json({
+      keyIdeas: fallbackInsights.keyIdeas,
+      keywords: translatedKeywords.length > 0 ? translatedKeywords : fallbackInsights.keywords,
+    })
   }
 }

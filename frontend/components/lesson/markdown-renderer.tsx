@@ -14,6 +14,7 @@ interface MarkdownRendererProps {
   content: string
   highlightTerms?: KeywordHighlight[]
   activeHighlightTerm?: string | null
+  onVisibleHighlightChange?: (term: string | null) => void
 }
 
 function resolveImageSrc(rawSrc: string): string | null {
@@ -50,6 +51,7 @@ export function MarkdownRenderer({
   content,
   highlightTerms = [],
   activeHighlightTerm,
+  onVisibleHighlightChange,
 }: MarkdownRendererProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [tappedTerm, setTappedTerm] = useState<string | null>(null)
@@ -85,7 +87,10 @@ export function MarkdownRenderer({
         if (!termsByMatch.has(key)) termsByMatch.set(key, entry)
       })
 
-    if (termsByMatch.size === 0) return
+    if (termsByMatch.size === 0) {
+      onVisibleHighlightChange?.(null)
+      return
+    }
 
     const matcher = new RegExp(
       `(${Array.from(termsByMatch.values())
@@ -103,6 +108,7 @@ export function MarkdownRenderer({
         if (parentElement.closest('code, pre, a, button[data-keyword-button="true"]')) {
           return NodeFilter.FILTER_REJECT
         }
+        matcher.lastIndex = 0
         return node.nodeValue && matcher.test(node.nodeValue)
           ? NodeFilter.FILTER_ACCEPT
           : NodeFilter.FILTER_REJECT
@@ -140,8 +146,8 @@ export function MarkdownRenderer({
           button.textContent = part
           const isActive = normalizedPart === active || normalizedPart === tapped
           button.className = isActive
-            ? 'cursor-pointer rounded px-1 font-semibold underline decoration-dotted underline-offset-4 transition-colors bg-amber-400 text-slate-950 dark:bg-amber-400 dark:text-slate-950'
-            : 'cursor-pointer rounded px-1 underline decoration-dotted underline-offset-4 decoration-amber-500/60 text-inherit transition-colors hover:bg-amber-300 hover:text-amber-900 hover:font-semibold dark:decoration-amber-400/60 dark:hover:bg-amber-400 dark:hover:text-slate-950'
+            ? 'cursor-pointer rounded-md px-1 font-semibold underline decoration-solid underline-offset-4 transition-colors bg-amber-400 text-slate-950 dark:bg-amber-300 dark:text-slate-950'
+            : 'cursor-pointer rounded-md px-1 font-medium underline decoration-dotted underline-offset-4 decoration-amber-500 text-slate-900 transition-colors bg-amber-100/85 hover:bg-amber-200 dark:decoration-amber-300 dark:bg-amber-500/20 dark:text-amber-100 dark:hover:bg-amber-500/35'
 
           wrapper.appendChild(button)
 
@@ -179,10 +185,60 @@ export function MarkdownRenderer({
     }
     container.addEventListener('click', handleClick)
 
+    const highlightButtons = Array.from(
+      container.querySelectorAll<HTMLButtonElement>('button[data-keyword-button="true"]')
+    )
+    let currentVisibleTerm: string | null | undefined
+
+    const updateVisibleTerm = () => {
+      if (!onVisibleHighlightChange) return
+
+      const viewportAnchor = window.innerHeight * 0.35
+      const candidates = highlightButtons
+        .map((button) => {
+          const rect = button.getBoundingClientRect()
+          const intersectsViewport = rect.bottom >= 0 && rect.top <= window.innerHeight
+          if (!intersectsViewport) return null
+
+          return {
+            button,
+            distance: Math.abs(rect.top - viewportAnchor),
+            height: rect.height,
+          }
+        })
+        .filter(
+          (candidate): candidate is { button: HTMLButtonElement; distance: number; height: number } =>
+            candidate !== null
+        )
+
+      candidates.sort((left, right) => {
+        if (left.distance !== right.distance) return left.distance - right.distance
+        return right.height - left.height
+      })
+
+      const nextVisibleTerm = candidates[0]?.button.dataset.keywordTerm ?? null
+      if (nextVisibleTerm === currentVisibleTerm) return
+      currentVisibleTerm = nextVisibleTerm
+      onVisibleHighlightChange(nextVisibleTerm)
+    }
+
+    if (highlightButtons.length > 0 && onVisibleHighlightChange) {
+      const handleScrollOrResize = () => updateVisibleTerm()
+      window.addEventListener('scroll', handleScrollOrResize, { passive: true })
+      window.addEventListener('resize', handleScrollOrResize)
+      window.requestAnimationFrame(updateVisibleTerm)
+      return () => {
+        container.removeEventListener('click', handleClick)
+        window.removeEventListener('scroll', handleScrollOrResize)
+        window.removeEventListener('resize', handleScrollOrResize)
+      }
+    }
+
+    onVisibleHighlightChange?.(null)
     return () => {
       container.removeEventListener('click', handleClick)
     }
-  }, [content, highlightTerms, activeHighlightTerm, tappedTerm])
+  }, [content, highlightTerms, activeHighlightTerm, onVisibleHighlightChange, tappedTerm])
 
   return (
     <div ref={containerRef} className="lesson-prose">

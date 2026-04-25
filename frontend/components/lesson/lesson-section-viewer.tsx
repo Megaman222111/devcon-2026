@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { BookOpenText, ChevronRight, Languages } from 'lucide-react'
 import { MarkdownRenderer } from '@/components/lesson/markdown-renderer'
 import { AiAssistant } from '@/components/chatbot/ai-assistant'
-import { useAppStore } from '@/lib/store'
+import { useAppStore, type LanguageCode } from '@/lib/store'
 import { cn } from '@/lib/utils'
 
 function normalizeTerm(value: string) {
@@ -26,7 +26,7 @@ interface LessonSectionViewerProps {
 
 interface KeywordPair {
   english: string
-  french: string
+  translated: string
 }
 
 interface LessonInsights {
@@ -34,9 +34,22 @@ interface LessonInsights {
   keywords: KeywordPair[]
 }
 
-const TARGET_LANGUAGE = 'fr'
-const TARGET_LANGUAGE_LABEL = 'French'
 const TRANSLATION_UNLOCK_ENERGY = 5
+const LANGUAGE_LABELS: Record<LanguageCode, string> = {
+  en: 'English',
+  tl: 'Tagalog',
+  hi: 'Hindi',
+  ur: 'Urdu',
+  zh: 'Mandarin',
+  ko: 'Korean',
+  vi: 'Vietnamese',
+  es: 'Spanish',
+  pt: 'Portuguese',
+  fr: 'French',
+  ar: 'Arabic',
+  ja: 'Japanese',
+  gu: 'Gujarati',
+}
 
 export function LessonSectionViewer({
   lessonId,
@@ -51,18 +64,22 @@ export function LessonSectionViewer({
   const [insightsByKey, setInsightsByKey] = useState<Record<string, LessonInsights>>({})
   const [translationUnlocked, setTranslationUnlocked] = useState(false)
   const [hoveredKeyword, setHoveredKeyword] = useState<string | null>(null)
+  const [visibleKeyword, setVisibleKeyword] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'reading' | 'terms'>('reading')
   const [scrollProgress, setScrollProgress] = useState(0)
 
   const containerRef = useRef<HTMLDivElement>(null)
-
-  const normalizedHovered = hoveredKeyword ? normalizeTerm(hoveredKeyword) : null
+  const termsListRef = useRef<HTMLDivElement>(null)
+  const termButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+  const lastSyncedTermRef = useRef<string | null>(null)
 
   const fullMarkdown = useMemo(
     () => sections.map((section) => `## ${section.heading}\n\n${section.markdown}`).join('\n\n'),
     [sections]
   )
-  const translationCacheKey = `lesson:${TARGET_LANGUAGE}`
+  const targetLanguage = useAppStore((state) => state.user?.language ?? 'fr')
+  const targetLanguageLabel = LANGUAGE_LABELS[targetLanguage] ?? targetLanguage.toUpperCase()
+  const translationCacheKey = `lesson:${targetLanguage}`
   const energy = useAppStore((state) => state.progress.xp)
   const addXP = useAppStore((state) => state.addXP)
   const addToast = useAppStore((state) => state.addToast)
@@ -80,12 +97,15 @@ export function LessonSectionViewer({
   const highlightTerms = useMemo(
     () =>
       keywords.map((keyword) => ({
-        match: translationEnabled ? keyword.french : keyword.english,
-        translation: translationEnabled ? keyword.english : keyword.french,
-        translationLabel: translationEnabled ? 'English' : TARGET_LANGUAGE_LABEL,
+        match: translationEnabled ? keyword.translated : keyword.english,
+        translation: translationEnabled ? keyword.english : keyword.translated,
+        translationLabel: translationEnabled ? 'English' : targetLanguageLabel,
       })),
-    [keywords, translationEnabled]
+    [keywords, targetLanguageLabel, translationEnabled]
   )
+
+  const activeKeyword = hoveredKeyword ?? visibleKeyword
+  const normalizedActiveKeyword = activeKeyword ? normalizeTerm(activeKeyword) : null
 
   useEffect(() => {
     const existing = insightsByKey[translationCacheKey]
@@ -101,14 +121,14 @@ export function LessonSectionViewer({
           body: JSON.stringify({
             heading: 'Lesson content',
             text: fullMarkdown,
-            targetLang: TARGET_LANGUAGE,
+            targetLang: targetLanguage,
           }),
         })
         if (!response.ok || cancelled) return
 
         const payload = (await response.json()) as {
           keyIdeas?: string[]
-          keywords?: { english?: string; french?: string }[]
+          keywords?: { english?: string; translated?: string }[]
         }
         setInsightsByKey((prev) => ({
           ...prev,
@@ -116,7 +136,7 @@ export function LessonSectionViewer({
             keyIdeas: payload.keyIdeas ?? [],
             keywords: (payload.keywords ?? []).filter(
               (item): item is KeywordPair =>
-                typeof item.english === 'string' && typeof item.french === 'string'
+                typeof item.english === 'string' && typeof item.translated === 'string'
             ),
           },
         }))
@@ -129,7 +149,7 @@ export function LessonSectionViewer({
     return () => {
       cancelled = true
     }
-  }, [insightsByKey, fullMarkdown, translationCacheKey])
+  }, [insightsByKey, fullMarkdown, targetLanguage, translationCacheKey])
 
 
   useEffect(() => {
@@ -153,7 +173,30 @@ export function LessonSectionViewer({
     }
   }, [renderedMarkdown])
 
-  const handleTranslateSelection = async (value: 'original' | 'french') => {
+  useEffect(() => {
+    if (!normalizedActiveKeyword) return
+    if (lastSyncedTermRef.current === normalizedActiveKeyword) return
+
+    const nextButton = termButtonRefs.current[normalizedActiveKeyword]
+    const listNode = termsListRef.current
+    if (!nextButton || !listNode) return
+
+    lastSyncedTermRef.current = normalizedActiveKeyword
+
+    const listRect = listNode.getBoundingClientRect()
+    const buttonRect = nextButton.getBoundingClientRect()
+    const offset = buttonRect.top - listRect.top - listRect.height / 2 + buttonRect.height / 2
+    listNode.scrollTo({
+      top: listNode.scrollTop + offset,
+      behavior: 'smooth',
+    })
+  }, [normalizedActiveKeyword])
+
+  useEffect(() => {
+    lastSyncedTermRef.current = null
+  }, [translationEnabled, translationCacheKey])
+
+  const handleTranslateSelection = async (value: 'original' | 'translated') => {
     if (value === 'original') {
       setTranslationEnabled(false)
       return
@@ -170,7 +213,7 @@ export function LessonSectionViewer({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: fullMarkdown,
-          targetLang: TARGET_LANGUAGE,
+          targetLang: targetLanguage,
         }),
       })
       if (!response.ok) return
@@ -195,7 +238,7 @@ export function LessonSectionViewer({
     }
 
     const confirmed = window.confirm(
-      `Unlock ${TARGET_LANGUAGE_LABEL} translation for this section for ${TRANSLATION_UNLOCK_ENERGY} lightning?`
+      `Unlock ${targetLanguageLabel} translation for this section for ${TRANSLATION_UNLOCK_ENERGY} lightning?`
     )
     if (!confirmed) return
 
@@ -203,7 +246,7 @@ export function LessonSectionViewer({
     setTranslationUnlocked(true)
     addToast({
       type: 'info',
-      message: `${TARGET_LANGUAGE_LABEL} translation unlocked for this lesson.`,
+      message: `${targetLanguageLabel} translation unlocked for this lesson.`,
     })
   }
 
@@ -259,7 +302,8 @@ export function LessonSectionViewer({
             <MarkdownRenderer
               content={renderedMarkdown}
               highlightTerms={highlightTerms}
-              activeHighlightTerm={hoveredKeyword}
+              activeHighlightTerm={activeKeyword}
+              onVisibleHighlightChange={setVisibleKeyword}
             />
 
             <div className="mt-8 flex flex-col gap-3 border-t border-slate-200 pt-6 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
@@ -296,15 +340,15 @@ export function LessonSectionViewer({
               )}
               <select
                 id="translate-select"
-                value={translationEnabled ? 'french' : 'original'}
+                value={translationEnabled ? 'translated' : 'original'}
                 disabled={!translationUnlocked || isTranslating}
                 onChange={(event) =>
-                  handleTranslateSelection(event.target.value as 'original' | 'french')
+                  handleTranslateSelection(event.target.value as 'original' | 'translated')
                 }
                 className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
               >
                 <option value="original">Original</option>
-                <option value="french">French</option>
+                <option value="translated">{targetLanguageLabel}</option>
               </select>
               {!translationUnlocked && (
                 <span className="text-xs text-slate-500 dark:text-slate-400">
@@ -331,7 +375,7 @@ export function LessonSectionViewer({
                 <span className="font-semibold uppercase tracking-[0.18em]">Key Terms</span>
               </div>
               <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                {translationEnabled ? 'English ↔ French' : `English ↔ ${TARGET_LANGUAGE_LABEL}`}
+                {translationEnabled ? `${targetLanguageLabel} ↔ English` : `English ↔ ${targetLanguageLabel}`}
               </div>
             </div>
 
@@ -357,18 +401,21 @@ export function LessonSectionViewer({
                   ? 'Generating terms…'
                   : 'All terms in lesson'}
               </div>
-              <div className="mt-3 space-y-2">
+              <div ref={termsListRef} className="mt-3 max-h-[26rem] space-y-2 overflow-y-auto pr-1">
                 {keywords.length === 0 && !isLoadingInsights && (
                   <p className="text-sm text-slate-500 dark:text-slate-400">No key terms detected.</p>
                 )}
                 {keywords.map((keyword) => {
-                  const inlineTerm = translationEnabled ? keyword.french : keyword.english
-                  const altTerm = translationEnabled ? keyword.english : keyword.french
+                  const inlineTerm = translationEnabled ? keyword.translated : keyword.english
+                  const altTerm = translationEnabled ? keyword.english : keyword.translated
                   const normalizedTerm = normalizeTerm(inlineTerm)
-                  const isHovered = normalizedHovered === normalizedTerm
+                  const isActive = normalizedActiveKeyword === normalizedTerm
                   return (
                     <button
-                      key={`${keyword.english}-${keyword.french}`}
+                      key={`${keyword.english}-${keyword.translated}`}
+                      ref={(node) => {
+                        termButtonRefs.current[normalizedTerm] = node
+                      }}
                       type="button"
                       onMouseEnter={() => setHoveredKeyword(inlineTerm)}
                       onMouseLeave={() => setHoveredKeyword(null)}
@@ -376,7 +423,7 @@ export function LessonSectionViewer({
                       onBlur={() => setHoveredKeyword(null)}
                       className={cn(
                         'w-full rounded-2xl border px-4 py-3 text-left transition-colors',
-                        isHovered
+                        isActive
                           ? 'border-amber-500 bg-amber-100 text-slate-900 shadow-md shadow-amber-500/20 ring-2 ring-amber-400/60 dark:bg-amber-500/15 dark:text-white dark:shadow-amber-500/10 dark:ring-amber-400/50'
                           : 'border-slate-200 bg-slate-50 text-slate-800 hover:border-amber-500/40 hover:bg-amber-50 dark:border-slate-800 dark:bg-slate-950/70 dark:text-slate-200 dark:hover:border-amber-500/40 dark:hover:bg-slate-900'
                       )}
